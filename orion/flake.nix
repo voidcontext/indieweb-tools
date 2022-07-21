@@ -9,7 +9,7 @@
   inputs.rust-overlay.url = "github:oxalica/rust-overlay";
   inputs.rust-overlay.inputs.nixpkgs.follows = "nixpkgs";
 
-  inputs.nix-utils.url = "git+ssh://git@github.com/voidcontext/nix-utils";
+  inputs.nix-utils.url = "git+https://github.com/voidcontext/nix-utils";
   inputs.nix-utils.inputs.nixpkgs.follows = "nixpkgs";
   inputs.nix-utils.inputs.rust-overlay.follows = "nixpkgs";
 

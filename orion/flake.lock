@@ -56,17 +56,17 @@
         ]
       },
       "locked": {
-        "lastModified": 1658446302,
-        "narHash": "sha256-bQpX99qetku4xTjIUAJRlPN8YwZ4bKSQyrM+bofmBKc=",
+        "lastModified": 1658446731,
+        "narHash": "sha256-yWvnBSmPnILYYwZ1bOR+P7FCSkIFVgy8L7zjRMWYPAo=",
         "ref": "refs/heads/main",
-        "rev": "47852ae7b2ed7bb1f708eef2a046eb292d04ace9",
-        "revCount": 3,
+        "rev": "ddea90562f5fe63c8adf5d8f3e3b2fa6d0306acc",
+        "revCount": 4,
         "type": "git",
-        "url": "ssh://git@github.com/voidcontext/nix-utils"
+        "url": "https://github.com/voidcontext/nix-utils"
       },
       "original": {
         "type": "git",
-        "url": "ssh://git@github.com/voidcontext/nix-utils"
+        "url": "https://github.com/voidcontext/nix-utils"
       }
     },
     "nixpkgs": {
