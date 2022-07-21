@@ -4,4 +4,4 @@ My collection of indieweb tools
 
 ## Components
 
-- orion: Microblog syndication to Twitter and Mastodon
+- [orion](orion/): Microblog syndication to Twitter and Mastodon
