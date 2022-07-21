@@ -9,7 +9,11 @@
   inputs.rust-overlay.url = "github:oxalica/rust-overlay";
   inputs.rust-overlay.inputs.nixpkgs.follows = "nixpkgs";
 
-  outputs = { self, ... }@inputs: inputs.flake-utils.lib.eachDefaultSystem (system:
+  inputs.nix-utils.url = "git+ssh://git@github.com/voidcontext/nix-utils";
+  inputs.nix-utils.inputs.nixpkgs.follows = "nixpkgs";
+  inputs.nix-utils.inputs.rust-overlay.follows = "nixpkgs";
+
+  outputs = { self, nix-utils, ... }@inputs: inputs.flake-utils.lib.eachDefaultSystem (system:
     let
       overlays = [ inputs.rust-overlay.overlays.default ];
 
@@ -17,11 +21,13 @@
 
       rust = pkgs.rust-bin.stable."1.61.0".default;
 
-    in {
-      apps.cargo = {
-        type = "app";
-        program = "${pkgs.cargo}/bin/cargo";
-      };
+      orion = nix-utils.rust.${system}.mkRustBinary pkgs { src = ./.; };
+    in rec {
+      apps.cargo = nix-utils.rust.apps.cargo pkgs;
+      apps.default = orion.app;
+
+      packages.default = orion.package;
+      checks.default = orion.package;
     }
   );
 }
