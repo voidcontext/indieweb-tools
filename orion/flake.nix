@@ -1,5 +1,5 @@
 {
- # Use the current stable release of nixpkgs
+  # Use the current stable release of nixpkgs
   inputs.nixpkgs.url = "nixpkgs/release-22.05";
 
   # flake-utils helps removing some boilerplate
@@ -11,7 +11,7 @@
 
   inputs.nix-utils.url = "git+https://github.com/voidcontext/nix-utils";
   inputs.nix-utils.inputs.nixpkgs.follows = "nixpkgs";
-  inputs.nix-utils.inputs.rust-overlay.follows = "nixpkgs";
+  inputs.nix-utils.inputs.rust-overlay.follows = "rust-overlay";
 
   outputs = { self, nix-utils, ... }@inputs: inputs.flake-utils.lib.eachDefaultSystem (system:
     let
@@ -21,13 +21,27 @@
 
       rust = pkgs.rust-bin.stable."1.61.0".default;
 
-      orion = nix-utils.rust.${system}.mkRustBinary pkgs { src = ./.; };
-    in rec {
-      apps.cargo = nix-utils.rust.apps.cargo pkgs;
-      apps.default = orion.app;
+      buildInputs = pkgs.lib.optional (system == "x86_64-darwin")
+        pkgs.darwin.apple_sdk.frameworks.Security;
 
-      packages.default = orion.package;
-      checks.default = orion.package;
+      orion = nix-utils.rust.${system}.mkRustBinary pkgs {
+        src = ./.;
+        inherit rust buildInputs;
+      };
+    in
+    rec {
+      packages.default = orion;
+      checks.default = orion;
+
+      devShells.default = pkgs.mkShell {
+        buildInputs = buildInputs ++ [
+          rust
+          pkgs.cargo-outdated
+          pkgs.rust-analyzer
+          pkgs.rustfmt
+          pkgs.nixpkgs-fmt
+        ];
+      };
     }
   );
 }

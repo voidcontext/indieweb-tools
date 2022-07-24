@@ -6,3 +6,16 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+serde = "1.0"
+serde_derive = "1.0"
+log = "0.4"
+simple_logger = "2.0"
+toml = "0.5"
+rss = "2.0"
+reqwest = "0.11.11"
+tokio = { version = "1.20.0", features = ["full"] }
+futures = "0.3.14"
+async-trait = "0.1.56"
+
+[dev-dependencies]
+async-mutex = "1.4.0"

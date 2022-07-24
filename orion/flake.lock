@@ -52,15 +52,15 @@
           "nixpkgs"
         ],
         "rust-overlay": [
-          "nixpkgs"
+          "rust-overlay"
         ]
       },
       "locked": {
-        "lastModified": 1658446731,
-        "narHash": "sha256-yWvnBSmPnILYYwZ1bOR+P7FCSkIFVgy8L7zjRMWYPAo=",
+        "lastModified": 1658525540,
+        "narHash": "sha256-p/EMrljdT6L4F8VZBAvn+YLLhv8HetWN8zDnnJI6n4o=",
         "ref": "refs/heads/main",
-        "rev": "ddea90562f5fe63c8adf5d8f3e3b2fa6d0306acc",
-        "revCount": 4,
+        "rev": "52fb6190eaa078bb801f868f94824ee4f19e6f95",
+        "revCount": 13,
         "type": "git",
         "url": "https://github.com/voidcontext/nix-utils"
       },
