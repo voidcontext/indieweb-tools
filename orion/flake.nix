@@ -21,8 +21,10 @@
 
       rust = pkgs.rust-bin.stable."1.61.0".default;
 
-      buildInputs = pkgs.lib.optional (system == "x86_64-darwin")
-        pkgs.darwin.apple_sdk.frameworks.Security;
+      buildInputs =
+        (pkgs.lib.optional (system == "x86_64-darwin")
+          pkgs.darwin.apple_sdk.frameworks.Security)
+        ++ (pkgs.lib.optional pkgs.stdenv.isLinux pkgs.pkg-config);
 
       orion = nix-utils.rust.${system}.mkRustBinary pkgs {
         src = ./.;
