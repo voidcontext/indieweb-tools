@@ -1,36 +1,42 @@
-use futures::{future, StreamExt, TryFutureExt};
+use futures::{Future, StreamExt, TryFutureExt};
 use rss::Channel;
 
 use crate::target::Target;
 use crate::{Config, RssClient};
 
 /// Orchestrates syndication
-pub async fn syndicate<'rss_client>(
+pub async fn syndicate<'a>(
     config: &Config,
-    rss_client: Box<dyn RssClient + 'rss_client>,
+    rss_client: Box<dyn RssClient + 'a>,
     targets: &[Box<dyn Target>],
-) -> Result<(), Box<dyn std::error::Error + 'rss_client>> {
+) -> Result<(), Box<dyn std::error::Error + 'a>> {
     log::debug!("Received config: {:?}", config);
-    futures::stream::iter(config.rss.urls.iter())
-        .map(|url| {
-            rss_client
-                .get_channel(url)
-                .and_then(|channel| syndycate_channel(channel, targets))
-        })
-        .buffer_unordered(10)
-        .collect::<Vec<_>>()
-        .await
-        .into_iter()
-        .collect::<Result<(), Box<dyn std::error::Error>>>()
+    run_and_collect(config.rss.urls.iter(), |url| {
+        rss_client
+            .get_channel(url)
+            .and_then(|channel| syndycate_channel(channel, targets))
+    })
+    .await
 }
 
 /// Syndicates a single channel
-async fn syndycate_channel<'a>(
+async fn syndycate_channel(
     channel: Channel,
     targets: &[Box<dyn Target>],
-) -> Result<(), Box<dyn std::error::Error + 'a>> {
-    futures::stream::iter(targets.iter())
-        .map(|target| target.publish(&channel.items))
+) -> Result<(), Box<dyn std::error::Error>> {
+    run_and_collect(targets.iter(), |target| target.publish(&channel.items)).await
+}
+
+async fn run_and_collect<C, I, F, Fu>(items: C, f: F) -> Result<(), Box<dyn std::error::Error>>
+where
+    C: Iterator<Item = I>,
+    // TODO: understand why this didn't work: Fn(I) -> dyn Future<Output = Result<(), Box<dyn std::error::Error>>>
+    //       or: Fn(I) -> Pin<Box<dyn Future<Output = Result<(), Box<dyn std::error::Error>>>>>
+    F: Fn(I) -> Fu,
+    Fu: Future<Output = Result<(), Box<dyn std::error::Error>>>,
+{
+    futures::stream::iter(items)
+        .map(f)
         .buffer_unordered(10)
         .collect::<Vec<_>>()
         .await
