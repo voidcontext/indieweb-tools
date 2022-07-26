@@ -42,6 +42,7 @@
         buildInputs = nativeBuildInputs ++ buildInputs ++ [
           rust
           pkgs.cargo-outdated
+          pkgs.cargo-watch
           pkgs.rust-analyzer
           pkgs.rustfmt
           pkgs.nixpkgs-fmt

@@ -32,10 +32,11 @@ impl RssClient for RssClientImpl {
 
 #[cfg(test)]
 pub mod stubs {
-    use std::sync::Arc;
+    use std::{fmt::Display, ops::Deref, sync::Arc};
 
     use async_mutex::Mutex;
     use async_trait::async_trait;
+    use reqwest::Url;
     use rss::{Channel, Item};
 
     use super::RssClient;
@@ -63,13 +64,35 @@ pub mod stubs {
             let mut urls = self.urls.lock().await;
             urls.push(url.to_owned());
 
-            let channel = Channel {
-                items: default_items(url),
-                link: url.to_owned(),
-                ..Default::default()
-            };
+            match Url::parse(url) {
+                Ok(parsed) => {
+                    let should_fail = parsed
+                        .query_pairs()
+                        .any(|(key, value)| key.deref() == "failure" && value.deref() == "1");
 
-            Ok(channel)
+                    if should_fail {
+                        Err(Box::new(RssClientError))
+                    } else {
+                        let channel = Channel {
+                            items: default_items(url),
+                            link: url.to_owned(),
+                            ..Default::default()
+                        };
+
+                        Ok(channel)
+                    }
+                }
+                _ => panic!("Invalid url: {}", url),
+            }
         }
     }
+
+    #[derive(Debug)]
+    pub struct RssClientError;
+    impl Display for RssClientError {
+        fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+            write!(f, "RssClientError")
+        }
+    }
+    impl std::error::Error for RssClientError {}
 }

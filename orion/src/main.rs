@@ -5,11 +5,12 @@ pub use config::Config;
 use log::LevelFilter::{Debug, Info};
 use simple_logger::SimpleLogger;
 
-use crate::syndicate::Target;
+use crate::target::Target;
 
 mod config;
 mod rss;
 mod syndicate;
+mod target;
 
 #[derive(Debug)]
 enum OrionError {
@@ -59,6 +60,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 #[cfg(test)]
 pub mod stubs {
-
     pub use crate::rss::stubs as rss;
+    pub use crate::target::stubs as target;
 }
