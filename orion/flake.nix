@@ -21,14 +21,17 @@
 
       rust = pkgs.rust-bin.stable."1.61.0".default;
 
-      buildInputs =
-        (pkgs.lib.optional (system == "x86_64-darwin")
-          pkgs.darwin.apple_sdk.frameworks.Security)
-        ++ (pkgs.lib.optional pkgs.stdenv.isLinux pkgs.pkg-config);
+      nativeBuildInputs = with pkgs.lib;
+        (optional pkgs.stdenv.isLinux pkgs.pkg-config);
+
+      buildInputs = with pkgs.lib;
+        (optional pkgs.stdenv.isLinux pkgs.openssl) ++
+        (optional (system == "x86_64-darwin")
+          pkgs.darwin.apple_sdk.frameworks.Security);
 
       orion = nix-utils.rust.${system}.mkRustBinary pkgs {
         src = ./.;
-        inherit rust buildInputs;
+        inherit rust nativeBuildInputs buildInputs;
       };
     in
     rec {
@@ -36,7 +39,7 @@
       checks.default = orion;
 
       devShells.default = pkgs.mkShell {
-        buildInputs = buildInputs ++ [
+        buildInputs = nativeBuildInputs ++ buildInputs ++ [
           rust
           pkgs.cargo-outdated
           pkgs.rust-analyzer
