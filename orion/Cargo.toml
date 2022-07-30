@@ -16,6 +16,9 @@ reqwest = "0.11.11"
 tokio = { version = "1.20.0", features = ["full"] }
 futures = "0.3.14"
 async-trait = "0.1.56"
+oauth2 = "4.2.3"
+async-mutex = "1.4.0"
 
 [dev-dependencies]
-async-mutex = "1.4.0"
+url = "2.2.2"
+wiremock = "0.5"

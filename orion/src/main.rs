@@ -8,9 +8,12 @@ use simple_logger::SimpleLogger;
 use crate::target::Target;
 
 mod config;
+mod mastodon;
+mod oauth;
 mod rss;
 mod syndicate;
 mod target;
+mod twitter;
 
 #[derive(Debug)]
 enum OrionError {
