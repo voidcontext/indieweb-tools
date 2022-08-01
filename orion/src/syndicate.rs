@@ -48,6 +48,9 @@ where
 mod test {
     use std::sync::Arc;
 
+    use oauth2::ClientId;
+
+    use crate::config::{DBConfig, TwitterConfig};
     use crate::stubs::rss::{default_items, StubRssClient};
     use crate::stubs::target::StubTarget;
     use crate::target::stubs::FailingStubTarget;
@@ -58,9 +61,16 @@ mod test {
     #[tokio::test]
     async fn test_syndycate_fetches_a_feed() {
         let feed = "http://example.com/rss.xml";
+        // TODO: create fn that takes URL and hardcodes the rest
         let config = Config {
             rss: RSSConfig {
                 urls: vec![feed.to_string()],
+            },
+            db: DBConfig {
+                path: String::from("some/path"),
+            },
+            twitter: TwitterConfig {
+                client_id: ClientId::new(String::from("some_client_id")),
             },
         };
 
@@ -86,6 +96,12 @@ mod test {
             rss: RSSConfig {
                 urls: vec![feed1.to_string(), feed2.to_string()],
             },
+            db: DBConfig {
+                path: String::from("some/path"),
+            },
+            twitter: TwitterConfig {
+                client_id: ClientId::new(String::from("some_client_id")),
+            },
         };
 
         let client = StubRssClient::default();
@@ -108,6 +124,12 @@ mod test {
         let config = Config {
             rss: RSSConfig {
                 urls: vec![feed.to_string()],
+            },
+            db: DBConfig {
+                path: String::from("some/path"),
+            },
+            twitter: TwitterConfig {
+                client_id: ClientId::new(String::from("some_client_id")),
             },
         };
 
@@ -132,6 +154,12 @@ mod test {
         let config = Config {
             rss: RSSConfig {
                 urls: vec![feed1.to_string(), feed2.to_string()],
+            },
+            db: DBConfig {
+                path: String::from("some/path"),
+            },
+            twitter: TwitterConfig {
+                client_id: ClientId::new(String::from("some_client_id")),
             },
         };
 
@@ -166,6 +194,12 @@ mod test {
             rss: RSSConfig {
                 urls: vec![feed1.to_string(), feed2.to_string()],
             },
+            db: DBConfig {
+                path: String::from("some/path"),
+            },
+            twitter: TwitterConfig {
+                client_id: ClientId::new(String::from("some_client_id")),
+            },
         };
 
         let client = StubRssClient::default();
@@ -194,6 +228,12 @@ mod test {
         let config = Config {
             rss: RSSConfig {
                 urls: vec![feed1.to_string(), feed2.to_string()],
+            },
+            db: DBConfig {
+                path: String::from("some/path"),
+            },
+            twitter: TwitterConfig {
+                client_id: ClientId::new(String::from("some_client_id")),
             },
         };
 
