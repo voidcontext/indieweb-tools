@@ -23,13 +23,13 @@ jobs:
     - name: Flake Check
       run: nix flake check
 
-  flake-twitter-auth:
+  flake-app-auth:
 
     runs-on: ubuntu-latest
 
     defaults:
       run:
-        working-directory: twitter-auth
+        working-directory: app-auth
 
     steps:
     - name: Checkout
