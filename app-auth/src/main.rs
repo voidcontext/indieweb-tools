@@ -2,7 +2,6 @@ use std::fs;
 
 use serde_derive::Deserialize;
 use simple_logger::SimpleLogger;
-use tokio::sync::mpsc::Sender;
 
 use log::LevelFilter::{Debug, Info};
 
@@ -18,9 +17,15 @@ mod twitter;
 struct Cli {
     #[clap(subcommand)]
     command: Commands,
-    /// Print debug information, incliding secrets!
+    /// Print debug information, including secrets!
     #[clap(short, long, action)]
     debug: bool,
+    /// Path to the config file
+    #[clap(long, value_parser, default_value_t = String::from("config.toml"))]
+    config: String,
+    /// Update auth tokens in the given sled DB
+    #[clap(long, value_parser)]
+    sled_db_path: Option<String>,
 }
 
 #[derive(Subcommand)]
@@ -34,7 +39,9 @@ enum Commands {
 
 #[derive(Subcommand)]
 enum AuthSubcommands {
+    /// Twitter Oauth flow
     Twitter,
+    /// Mastodon Oauth flow
     Mastodon,
 }
 
@@ -42,29 +49,21 @@ enum AuthSubcommands {
 
 #[derive(Debug, Deserialize)]
 pub struct Config {
-    client_id: String,
-    db: DBConfig,
+    twitter: TwitterConfig,
 }
 
 #[derive(Debug, Deserialize)]
-struct DBConfig {
-    path: String,
+pub struct TwitterConfig {
+    client_id: String,
 }
 
 impl Config {
     pub fn from_file(file_name: &str) -> Result<Config, toml::de::Error> {
-        let config_str = fs::read_to_string(file_name).unwrap();
+        let config_str = fs::read_to_string(file_name)
+            .expect(&format!("The file '{}' doesn't exist", file_name));
 
         toml::from_str(&config_str)
     }
-}
-
-struct State {
-    challenge: String,
-    oauth_state: String,
-    client_id: String,
-    shutdown_signal: Sender<()>,
-    db: sled::Db,
 }
 
 #[tokio::main]
@@ -72,7 +71,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let cli = Cli::parse();
 
     // Load config
-    let config = Config::from_file("config.toml")?;
+    let config = Config::from_file(&cli.config)?;
 
     // Initialise logger
     let log_level = if cli.debug { Debug } else { Info };
@@ -80,7 +79,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     match cli.command {
         Commands::Auth { provider } => match provider {
-            AuthSubcommands::Twitter => twitter::start_flow(&config)
+            AuthSubcommands::Twitter => twitter::start_flow(&config, cli.sled_db_path)
                 .await
                 .map_err(|e| Box::new(e) as Box<dyn std::error::Error>),
             AuthSubcommands::Mastodon => todo!(),

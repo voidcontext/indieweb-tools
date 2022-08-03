@@ -11,25 +11,36 @@ use axum::{
     Extension, Router,
 };
 use serde_derive::Deserialize;
+use tokio::sync::mpsc::Sender;
 
 use super::Error;
-use crate::{Config, State};
+use crate::Config;
 
-pub async fn start(config: &Config, challenge: &String, csrf_state: &String) -> Result<(), Error> {
+struct State {
+    challenge: String,
+    oauth_state: String,
+    client_id: String,
+    shutdown_signal: Sender<()>,
+    sled_db_path: Option<String>,
+}
+
+pub async fn start(
+    config: &Config,
+    challenge: &String,
+    csrf_state: &String,
+    sled_db_path: Option<String>,
+) -> Result<(), Error> {
     // Create a channel to be able to shut down the webserver from the
     // Request handler after receiving the auth code
     let (tx, mut rx) = tokio::sync::mpsc::channel::<()>(10);
-
-    // Initialize db to store tokens
-    let db = sled::open(config.db.path.clone()).expect("Cannot create / open db");
 
     // Initialise the shared state
     let state = Arc::new(State {
         challenge: challenge.clone(),
         oauth_state: csrf_state.clone(),
-        client_id: config.client_id.clone(),
+        client_id: config.twitter.client_id.clone(),
         shutdown_signal: tx,
-        db,
+        sled_db_path,
     });
 
     let sock_addr = SocketAddr::new(IpAddr::V4(Ipv4Addr::LOCALHOST), 6009);
@@ -106,21 +117,22 @@ refresh_token: {}
         tokens.token_type, tokens.access_token, tokens.refresh_token
     );
 
-    state
-        .db
-        .insert(
+    if let Some(db_path) = state.sled_db_path.clone() {
+        // Initialize db to store tokens
+        let db = sled::open(db_path).expect("Cannot create / open db");
+
+        db.insert(
             bincode::serialize("auth:twitter:access_token").unwrap(),
             bincode::serialize(&tokens.access_token).unwrap(),
         )
         .unwrap();
 
-    state
-        .db
-        .insert(
+        db.insert(
             bincode::serialize("auth:twitter:refresh_token").unwrap(),
             bincode::serialize(&tokens.refresh_token).unwrap(),
         )
         .unwrap();
+    }
 
     // Send the shut down signal
     state.shutdown_signal.send(()).await.unwrap();

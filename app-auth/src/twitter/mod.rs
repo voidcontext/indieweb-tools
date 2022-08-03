@@ -19,7 +19,7 @@ impl Display for Error {
 
 impl std::error::Error for Error {}
 
-pub async fn start_flow(config: &Config) -> Result<(), Error> {
+pub async fn start_flow(config: &Config, sled_db_path: Option<String>) -> Result<(), Error> {
     // Create CSRF state and secret challenge
     let mut challenge = [0u8; 64];
     let mut csrf_state = [0u8; 64];
@@ -30,7 +30,7 @@ pub async fn start_flow(config: &Config) -> Result<(), Error> {
     let challenge = base64::encode(challenge);
     let csrf_state = base64::encode(csrf_state);
 
-    let oauth_uri = construct_uri(&config.client_id, &csrf_state, &challenge);
+    let oauth_uri = construct_uri(&config.twitter.client_id, &csrf_state, &challenge);
     println!(
         "Open the following link in your browser:
 
@@ -39,7 +39,7 @@ pub async fn start_flow(config: &Config) -> Result<(), Error> {
         oauth_uri
     );
 
-    listener::start(config, &challenge, &csrf_state).await
+    listener::start(config, &challenge, &csrf_state, sled_db_path).await
 }
 
 fn construct_uri(client_id: &str, csrf_state: &str, challenge: &str) -> String {
