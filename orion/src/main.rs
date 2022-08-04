@@ -1,7 +1,8 @@
-use std::{env, fmt::Display};
+use std::fmt::Display;
 
 pub use crate::rss::*;
-use crate::{auth::token_db::SledTokenDB, twitter::Twitter};
+use crate::{auth::token_db::SledTokenDB, mastodon::Mastodon, twitter::Twitter};
+use clap::Parser;
 pub use config::Config;
 use log::LevelFilter::{Debug, Info};
 use simple_logger::SimpleLogger;
@@ -15,6 +16,18 @@ mod rss;
 mod syndicate;
 mod target;
 mod twitter;
+
+#[derive(Parser)]
+#[clap(author, version, about, long_about = None)]
+#[clap(propagate_version = true)]
+struct Cli {
+    /// Print debug information, including secrets!
+    #[clap(short, long, action)]
+    debug: bool,
+    /// Path to the config file
+    #[clap(long, value_parser, default_value_t = String::from("config.toml"))]
+    config: String,
+}
 
 #[derive(Debug)]
 enum OrionError {
@@ -37,13 +50,12 @@ impl std::error::Error for OrionError {}
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let log_level =
-        env::var("ORION_DEBUG").map_or(Info, |debug| if debug == "1" { Debug } else { Info });
+    let cli = Cli::parse();
+
+    let log_level = if cli.debug { Debug } else { Info };
     SimpleLogger::new().with_level(log_level).init().unwrap();
 
-    let config_file = env::var("ORION_CONFIG_FILE").expect("Env var ORION_CONFIG_FILE must be set");
-
-    let result = match Config::from_file(&config_file) {
+    let result = match Config::from_file(&cli.config) {
         Err(err) => {
             log::error!("Couldn't load config: {:?}", err);
             Result::<(), Box<dyn std::error::Error>>::Err(Box::new(OrionError::ConfigError))
@@ -53,10 +65,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
             let token_db = SledTokenDB::new(&config.db.path);
 
-            let targets: Vec<Box<dyn Target>> = vec![Box::new(Twitter::new(
-                config.twitter.client_id.clone(),
-                token_db,
-            ))];
+            let targets: Vec<Box<dyn Target>> = vec![
+                Box::new(Twitter::new(config.twitter.client_id.clone(), token_db)),
+                Box::new(Mastodon::new(config.mastodon.access_token.clone())),
+            ];
 
             syndicate::syndicate(&config, Box::new(RssClientImpl), &targets).await
         }

@@ -48,9 +48,9 @@ where
 mod test {
     use std::sync::Arc;
 
-    use oauth2::ClientId;
+    use oauth2::{AccessToken, ClientId};
 
-    use crate::config::{DBConfig, TwitterConfig};
+    use crate::config::{DBConfig, MastodonConfig, TwitterConfig};
     use crate::stubs::rss::{default_items, StubRssClient};
     use crate::stubs::target::StubTarget;
     use crate::target::stubs::FailingStubTarget;
@@ -58,21 +58,26 @@ mod test {
 
     use super::syndicate;
 
-    #[tokio::test]
-    async fn test_syndycate_fetches_a_feed() {
-        let feed = "http://example.com/rss.xml";
-        // TODO: create fn that takes URL and hardcodes the rest
-        let config = Config {
-            rss: RSSConfig {
-                urls: vec![feed.to_string()],
-            },
+    fn config(urls: Vec<String>) -> Config {
+        Config {
+            rss: RSSConfig { urls },
             db: DBConfig {
                 path: String::from("some/path"),
             },
             twitter: TwitterConfig {
                 client_id: ClientId::new(String::from("some_client_id")),
             },
-        };
+            mastodon: MastodonConfig {
+                access_token: AccessToken::new(String::from("some-access-token")),
+            },
+        }
+    }
+
+    #[tokio::test]
+    async fn test_syndycate_fetches_a_feed() {
+        let feed = "http://example.com/rss.xml";
+        // TODO: create fn that takes URL and hardcodes the rest
+        let config = config(vec![feed.to_string()]);
 
         let client = StubRssClient::default();
         let client_calls = Arc::clone(&client.urls);
@@ -92,17 +97,7 @@ mod test {
     async fn test_syndycate_fetches_multiple_feeds() {
         let feed1 = "http://example.com/rss.xml";
         let feed2 = "https://blog.example.com/rss.xml";
-        let config = Config {
-            rss: RSSConfig {
-                urls: vec![feed1.to_string(), feed2.to_string()],
-            },
-            db: DBConfig {
-                path: String::from("some/path"),
-            },
-            twitter: TwitterConfig {
-                client_id: ClientId::new(String::from("some_client_id")),
-            },
-        };
+        let config = config(vec![feed1.to_string(), feed2.to_string()]);
 
         let client = StubRssClient::default();
         let client_calls = Arc::clone(&client.urls);
@@ -121,17 +116,7 @@ mod test {
     #[tokio::test]
     async fn test_syndycate_publishes_posts_to_targets() {
         let feed = "http://example.com/rss.xml";
-        let config = Config {
-            rss: RSSConfig {
-                urls: vec![feed.to_string()],
-            },
-            db: DBConfig {
-                path: String::from("some/path"),
-            },
-            twitter: TwitterConfig {
-                client_id: ClientId::new(String::from("some_client_id")),
-            },
-        };
+        let config = config(vec![feed.to_string()]);
 
         let client = StubRssClient::default();
         let stub_target = StubTarget::default();
@@ -151,17 +136,7 @@ mod test {
     async fn test_syndycate_publishes_from_multiple_feeds_to_multiple_targets() {
         let feed1 = "http://example.com/rss.xml";
         let feed2 = "https://blog.example.com/rss.xml";
-        let config = Config {
-            rss: RSSConfig {
-                urls: vec![feed1.to_string(), feed2.to_string()],
-            },
-            db: DBConfig {
-                path: String::from("some/path"),
-            },
-            twitter: TwitterConfig {
-                client_id: ClientId::new(String::from("some_client_id")),
-            },
-        };
+        let config = config(vec![feed1.to_string(), feed2.to_string()]);
 
         let client = StubRssClient::default();
         let stub_target1 = StubTarget::default();
@@ -190,17 +165,7 @@ mod test {
     async fn test_syndycate_publishes_when_single_feed_fails() {
         let feed1 = "http://example.com/rss.xml?failure=1";
         let feed2 = "https://blog.example.com/rss.xml";
-        let config = Config {
-            rss: RSSConfig {
-                urls: vec![feed1.to_string(), feed2.to_string()],
-            },
-            db: DBConfig {
-                path: String::from("some/path"),
-            },
-            twitter: TwitterConfig {
-                client_id: ClientId::new(String::from("some_client_id")),
-            },
-        };
+        let config = config(vec![feed1.to_string(), feed2.to_string()]);
 
         let client = StubRssClient::default();
         let stub_target1 = StubTarget::default();
@@ -225,17 +190,7 @@ mod test {
     async fn test_syndycate_publishes_when_single_target_fails() {
         let feed1 = "http://example.com/rss.xml";
         let feed2 = "https://blog.example.com/rss.xml";
-        let config = Config {
-            rss: RSSConfig {
-                urls: vec![feed1.to_string(), feed2.to_string()],
-            },
-            db: DBConfig {
-                path: String::from("some/path"),
-            },
-            twitter: TwitterConfig {
-                client_id: ClientId::new(String::from("some_client_id")),
-            },
-        };
+        let config = config(vec![feed1.to_string(), feed2.to_string()]);
 
         let client = StubRssClient::default();
         let stub_target1 = FailingStubTarget::default();

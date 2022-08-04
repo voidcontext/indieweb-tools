@@ -1,6 +1,6 @@
 use std::fs;
 
-use oauth2::ClientId;
+use oauth2::{AccessToken, ClientId};
 use serde_derive::Deserialize;
 
 #[derive(Debug, Deserialize, PartialEq)]
@@ -8,6 +8,7 @@ pub struct Config {
     pub rss: RSSConfig,
     pub db: DBConfig,
     pub twitter: TwitterConfig,
+    pub mastodon: MastodonConfig,
 }
 
 #[derive(Debug, Deserialize, PartialEq)]
@@ -25,6 +26,17 @@ pub struct TwitterConfig {
     pub client_id: ClientId,
 }
 
+#[derive(Debug, Deserialize)]
+pub struct MastodonConfig {
+    pub access_token: AccessToken,
+}
+
+impl PartialEq for MastodonConfig {
+    fn eq(&self, other: &Self) -> bool {
+        self.access_token.secret() == other.access_token.secret()
+    }
+}
+
 impl Config {
     pub fn from_file(file_name: &str) -> Result<Config, toml::de::Error> {
         let config_str = fs::read_to_string(file_name).unwrap();
@@ -35,10 +47,12 @@ impl Config {
 
 #[cfg(test)]
 mod test {
+    use oauth2::AccessToken;
     use oauth2::ClientId;
 
     use super::Config;
     use super::DBConfig;
+    use super::MastodonConfig;
     use super::RSSConfig;
     use super::TwitterConfig;
 
@@ -54,6 +68,8 @@ mod test {
         path = "some/path"
         [twitter]
         client_id = "some_client_id"
+        [mastodon]
+        access_token = "some-access-token"
         "#;
 
         assert_eq!(
@@ -70,6 +86,9 @@ mod test {
                 },
                 twitter: TwitterConfig {
                     client_id: ClientId::new(String::from("some_client_id"))
+                },
+                mastodon: MastodonConfig {
+                    access_token: AccessToken::new(String::from("some-access-token"))
                 }
             })
         )
