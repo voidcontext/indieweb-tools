@@ -41,29 +41,22 @@ struct TweetsRequest {
 
 #[async_trait(?Send)]
 impl<DB: TokenDB> Target for Twitter<DB> {
-    async fn publish<'a>(&self, posts: &[Item]) -> Result<(), Box<dyn std::error::Error + 'a>> {
-        futures::stream::iter(posts.iter())
-            .map(|post| {
-                log::debug!("processing post: {:?}", post);
-                let request = self
-                    .http_client
-                    .post("https://api.twitter.com/2/tweets")
-                    .json(&TweetsRequest {
-                        text: post.description().unwrap().to_owned(),
-                    });
-                self.authed_client
-                    .authed_request(request.build().unwrap())
-                    .and_then(|response| async {
-                        let body = response.text().await;
+    async fn publish<'a>(&self, post: &Item) -> Result<(), Box<dyn std::error::Error + 'a>> {
+        log::debug!("processing post: {:?}", post);
+        let request = self
+            .http_client
+            .post("https://api.twitter.com/2/tweets")
+            .json(&TweetsRequest {
+                text: post.description().unwrap().to_owned(),
+            });
+        self.authed_client
+            .authed_request(request.build().unwrap())
+            .and_then(|response| async {
+                let body = response.text().await;
 
-                        log::debug!("response body: {:?}", body);
-                        Ok(())
-                    })
+                log::debug!("response body: {:?}", body);
+                Ok(())
             })
-            .buffer_unordered(10)
-            .collect::<Vec<_>>()
             .await
-            .into_iter()
-            .collect()
     }
 }

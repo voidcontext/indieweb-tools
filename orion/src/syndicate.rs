@@ -24,7 +24,10 @@ async fn syndycate_channel(
     channel: Channel,
     targets: &[Box<dyn Target>],
 ) -> Result<(), Box<dyn std::error::Error>> {
-    run_and_collect(targets.iter(), |target| target.publish(&channel.items)).await
+    run_and_collect(targets.iter(), |target| {
+        run_and_collect(channel.items.iter(), |post| target.publish(post))
+    })
+    .await
 }
 
 async fn run_and_collect<C, I, F, Fu>(items: C, f: F) -> Result<(), Box<dyn std::error::Error>>
@@ -76,7 +79,6 @@ mod test {
     #[tokio::test]
     async fn test_syndycate_fetches_a_feed() {
         let feed = "http://example.com/rss.xml";
-        // TODO: create fn that takes URL and hardcodes the rest
         let config = config(vec![feed.to_string()]);
 
         let client = StubRssClient::default();
@@ -129,7 +131,7 @@ mod test {
 
         let calls = (*target_calls).lock().await;
 
-        assert_eq!(*calls, vec![default_items(feed)]);
+        assert_eq!(*calls, default_items(feed));
     }
 
     #[tokio::test]
@@ -153,13 +155,12 @@ mod test {
         let calls1 = (*target_calls1).lock().await;
         let calls2 = (*target_calls2).lock().await;
 
-        assert_eq!(*calls1, vec![default_items(feed1), default_items(feed2)]);
-        assert_eq!(*calls2, vec![default_items(feed1), default_items(feed2)]);
-    }
+        let mut expected = default_items(feed1);
+        expected.extend(default_items(feed2));
 
-    // TOOD: test the following scenarions
-    // - a failure in fetching a feed shouldn't stop syndycating the rest of the feeds
-    // - a failure in publishing to a target shouldn stop syndycating
+        assert_eq!(*calls1, expected);
+        assert_eq!(*calls2, expected);
+    }
 
     #[tokio::test]
     async fn test_syndycate_publishes_when_single_feed_fails() {
@@ -182,8 +183,8 @@ mod test {
         let calls1 = (*target_calls1).lock().await;
         let calls2 = (*target_calls2).lock().await;
 
-        assert_eq!(*calls1, vec![default_items(feed2)]);
-        assert_eq!(*calls2, vec![default_items(feed2)]);
+        assert_eq!(*calls1, default_items(feed2));
+        assert_eq!(*calls2, default_items(feed2));
     }
 
     #[tokio::test]
@@ -204,7 +205,9 @@ mod test {
         assert!(result.is_err());
 
         let calls2 = (*target_calls2).lock().await;
+        let mut expected = default_items(feed1);
+        expected.extend(default_items(feed2));
 
-        assert_eq!(*calls2, vec![default_items(feed1), default_items(feed2)]);
+        assert_eq!(*calls2, expected);
     }
 }

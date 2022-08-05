@@ -3,7 +3,7 @@ use rss::Item;
 
 #[async_trait(?Send)]
 pub trait Target {
-    async fn publish<'a>(&self, posts: &[Item]) -> Result<(), Box<dyn std::error::Error + 'a>>;
+    async fn publish<'a>(&self, post: &Item) -> Result<(), Box<dyn std::error::Error + 'a>>;
 }
 
 #[cfg(test)]
@@ -18,14 +18,14 @@ pub mod stubs {
 
     #[derive(Default)]
     pub struct StubTarget {
-        pub calls: Arc<Mutex<Vec<Vec<Item>>>>,
+        pub calls: Arc<Mutex<Vec<Item>>>,
     }
 
     #[async_trait(?Send)]
     impl Target for StubTarget {
-        async fn publish<'a>(&self, posts: &[Item]) -> Result<(), Box<dyn std::error::Error + 'a>> {
+        async fn publish<'a>(&self, post: &Item) -> Result<(), Box<dyn std::error::Error + 'a>> {
             let mut calls = self.calls.lock().await;
-            calls.push(posts.to_vec());
+            calls.push(post.clone());
             Ok(())
         }
     }
@@ -51,10 +51,7 @@ pub mod stubs {
 
     #[async_trait(?Send)]
     impl Target for FailingStubTarget {
-        async fn publish<'a>(
-            &self,
-            _posts: &[Item],
-        ) -> Result<(), Box<dyn std::error::Error + 'a>> {
+        async fn publish<'a>(&self, _post: &Item) -> Result<(), Box<dyn std::error::Error + 'a>> {
             Err(Box::new(TargetError))
         }
     }

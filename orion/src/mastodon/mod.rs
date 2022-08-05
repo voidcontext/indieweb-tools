@@ -26,30 +26,23 @@ struct UpdateStatusRequest {
 
 #[async_trait(?Send)]
 impl Target for Mastodon {
-    async fn publish<'a>(&self, posts: &[Item]) -> Result<(), Box<dyn std::error::Error + 'a>> {
-        futures::stream::iter(posts.iter())
-            .map(|post| {
-                log::debug!("processing post: {:?}", post);
-                self.http_client
-                    // TODO: make mastodon instance configurable
-                    .post("https://mastodon.social/api/v1/statuses")
-                    .bearer_auth(self.access_token.secret().clone())
-                    .json(&UpdateStatusRequest {
-                        status: post.description().unwrap().to_owned(),
-                    })
-                    .send()
-                    .and_then(|response| async {
-                        let body = response.text().await;
-
-                        log::debug!("response body: {:?}", body);
-                        Ok(())
-                    })
+    async fn publish<'a>(&self, post: &Item) -> Result<(), Box<dyn std::error::Error + 'a>> {
+        log::debug!("processing post: {:?}", post);
+        self.http_client
+            // TODO: make mastodon instance configurable
+            .post("https://mastodon.social/api/v1/statuses")
+            .bearer_auth(self.access_token.secret().clone())
+            .json(&UpdateStatusRequest {
+                status: post.description().unwrap().to_owned(),
             })
-            .buffer_unordered(10)
-            .collect::<Vec<_>>()
+            .send()
+            .and_then(|response| async {
+                let body = response.text().await;
+
+                log::debug!("response body: {:?}", body);
+                Ok(())
+            })
             .await
-            .into_iter()
-            .map(|r| r.map_err(|error| Box::new(error) as Box<dyn std::error::Error>))
-            .collect()
+            .map_err(|error| Box::new(error) as Box<dyn std::error::Error>)
     }
 }
