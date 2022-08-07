@@ -1,5 +1,5 @@
 use async_trait::async_trait;
-use futures::{StreamExt, TryFutureExt};
+use futures::TryFutureExt;
 use oauth2::{basic::BasicClient, AuthUrl, ClientId, TokenUrl};
 use reqwest::Client;
 use rss::Item;

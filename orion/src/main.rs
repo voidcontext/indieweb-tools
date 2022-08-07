@@ -67,7 +67,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
             let targets: Vec<Box<dyn Target>> = vec![
                 Box::new(Twitter::new(config.twitter.client_id.clone(), token_db)),
-                Box::new(Mastodon::new(config.mastodon.access_token.clone())),
+                Box::new(Mastodon::new(
+                    config.mastodon.base_uri.clone(),
+                    config.mastodon.access_token.clone(),
+                )),
             ];
 
             syndicate::syndicate(&config, Box::new(RssClientImpl), &targets).await

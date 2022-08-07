@@ -71,6 +71,7 @@ mod test {
                 client_id: ClientId::new(String::from("some_client_id")),
             },
             mastodon: MastodonConfig {
+                base_uri: String::from("https://example.com/mastodon"),
                 access_token: AccessToken::new(String::from("some-access-token")),
             },
         }

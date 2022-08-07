@@ -28,12 +28,13 @@ pub struct TwitterConfig {
 
 #[derive(Debug, Deserialize)]
 pub struct MastodonConfig {
+    pub base_uri: String,
     pub access_token: AccessToken,
 }
 
 impl PartialEq for MastodonConfig {
     fn eq(&self, other: &Self) -> bool {
-        self.access_token.secret() == other.access_token.secret()
+        self.base_uri == other.base_uri && self.access_token.secret() == other.access_token.secret()
     }
 }
 
@@ -69,6 +70,7 @@ mod test {
         [twitter]
         client_id = "some_client_id"
         [mastodon]
+        base_uri = "https://mastodon.social"
         access_token = "some-access-token"
         "#;
 
@@ -88,6 +90,7 @@ mod test {
                     client_id: ClientId::new(String::from("some_client_id"))
                 },
                 mastodon: MastodonConfig {
+                    base_uri: String::from("https://mastodon.social"),
                     access_token: AccessToken::new(String::from("some-access-token"))
                 }
             })

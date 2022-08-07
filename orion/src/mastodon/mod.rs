@@ -1,18 +1,20 @@
 use crate::target::Target;
 use async_trait::async_trait;
-use futures::{StreamExt, TryFutureExt};
+use futures::TryFutureExt;
 use oauth2::AccessToken;
 use reqwest::Client;
 use rss::Item;
 
 pub struct Mastodon {
+    base_uri: String,
     access_token: AccessToken,
     http_client: Client,
 }
 
 impl Mastodon {
-    pub fn new(access_token: AccessToken) -> Self {
+    pub fn new(base_uri: String, access_token: AccessToken) -> Self {
         Self {
+            base_uri,
             access_token,
             http_client: Client::new(),
         }
@@ -30,7 +32,7 @@ impl Target for Mastodon {
         log::debug!("processing post: {:?}", post);
         self.http_client
             // TODO: make mastodon instance configurable
-            .post("https://mastodon.social/api/v1/statuses")
+            .post(format!("{}/api/v1/statuses", self.base_uri))
             .bearer_auth(self.access_token.secret().clone())
             .json(&UpdateStatusRequest {
                 status: post.description().unwrap().to_owned(),
