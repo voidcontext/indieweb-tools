@@ -10,6 +10,7 @@ use axum::{
     routing::get,
     Extension, Router,
 };
+use rusqlite::Connection;
 use serde_derive::Deserialize;
 use tokio::sync::mpsc::Sender;
 
@@ -21,14 +22,14 @@ struct State {
     oauth_state: String,
     client_id: String,
     shutdown_signal: Sender<()>,
-    sled_db_path: Option<String>,
+    db_path: Option<String>,
 }
 
 pub async fn start(
     config: &Config,
     challenge: &String,
     csrf_state: &String,
-    sled_db_path: Option<String>,
+    db_path: Option<String>,
 ) -> Result<(), Error> {
     // Create a channel to be able to shut down the webserver from the
     // Request handler after receiving the auth code
@@ -40,7 +41,7 @@ pub async fn start(
         oauth_state: csrf_state.clone(),
         client_id: config.twitter.client_id.clone(),
         shutdown_signal: tx,
-        sled_db_path,
+        db_path,
     });
 
     let sock_addr = SocketAddr::new(IpAddr::V4(Ipv4Addr::LOCALHOST), 6009);
@@ -117,25 +118,37 @@ refresh_token: {}
         tokens.token_type, tokens.access_token, tokens.refresh_token
     );
 
-    if let Some(db_path) = state.sled_db_path.clone() {
-        // Initialize db to store tokens
-        let db = sled::open(db_path).expect("Cannot create / open db");
-
-        db.insert(
-            bincode::serialize("auth:twitter:access_token").unwrap(),
-            bincode::serialize(&tokens.access_token).unwrap(),
-        )
-        .unwrap();
-
-        db.insert(
-            bincode::serialize("auth:twitter:refresh_token").unwrap(),
-            bincode::serialize(&tokens.refresh_token).unwrap(),
-        )
-        .unwrap();
+    if let Some(db_path) = state.db_path.clone() {
+        persist_tokens(&tokens, &db_path).expect("couldn't persist tokens");
     }
 
     // Send the shut down signal
     state.shutdown_signal.send(()).await.unwrap();
 
     Html("<h1>Hello from twitter-auth</h1><p>Your tokens are displayed on the standard output.</p>")
+}
+
+fn persist_tokens(tokens: &TokenResponse, db_path: &String) -> rusqlite::Result<()> {
+    // Initialize db to store tokens
+    let conn = Connection::open(db_path)?;
+
+    conn.execute(
+        "CREATE TABLE IF NOT EXISTS auth_token (
+            provider      VARCHAR(20) PRIMARY KEY,
+            access_token  TEXT,
+            refresh_token TEXT
+        )
+        ",
+        (),
+    )?;
+
+    conn.execute(
+        "INSERT INTO auth_token (provider, access_token, refresh_token)
+         VALUES (?1, ?2, ?3)
+         ON CONFLICT (provider) 
+            DO UPDATE SET access_token = excluded.access_token, refresh_token = excluded.refresh_token",
+        ("twitter", tokens.access_token.clone(), tokens.refresh_token.clone()) 
+    )?;
+
+    Ok(())
 }

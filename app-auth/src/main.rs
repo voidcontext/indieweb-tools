@@ -23,9 +23,9 @@ struct Cli {
     /// Path to the config file
     #[clap(long, value_parser, default_value_t = String::from("config.toml"))]
     config: String,
-    /// Update auth tokens in the given sled DB
+    /// Update auth tokens in the given sqlite DB
     #[clap(long, value_parser)]
-    sled_db_path: Option<String>,
+    db_path: Option<String>,
 }
 
 #[derive(Subcommand)]
@@ -79,7 +79,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     match cli.command {
         Commands::Auth { provider } => match provider {
-            AuthSubcommands::Twitter => twitter::start_flow(&config, cli.sled_db_path)
+            AuthSubcommands::Twitter => twitter::start_flow(&config, cli.db_path)
                 .await
                 .map_err(|e| Box::new(e) as Box<dyn std::error::Error>),
             AuthSubcommands::Mastodon => todo!(),
