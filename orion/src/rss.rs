@@ -37,7 +37,7 @@ pub mod stubs {
     use async_mutex::Mutex;
     use async_trait::async_trait;
     use reqwest::Url;
-    use rss::{Channel, Item};
+    use rss::{Channel, GuidBuilder, Item};
 
     use super::RssClient;
 
@@ -47,9 +47,15 @@ pub mod stubs {
     }
 
     pub fn default_items(url: &str) -> Vec<Item> {
-        (1..5)
+        (0..4)
             .map(|i| Item {
                 title: Some(format!("This is pos #{} at {}", i, url)),
+                link: Some(format!("{}/post-{}", url, i)),
+                guid: Some(
+                    GuidBuilder::default()
+                        .value(format!("{}/post-{}", url, i))
+                        .build(),
+                ),
                 ..Default::default()
             })
             .collect()

@@ -1,4 +1,4 @@
-use crate::target::Target;
+use crate::{syndicated_post::SyndicatedPost, target::Target};
 use async_trait::async_trait;
 use futures::TryFutureExt;
 use oauth2::AccessToken;
@@ -28,7 +28,10 @@ struct UpdateStatusRequest {
 
 #[async_trait(?Send)]
 impl Target for Mastodon {
-    async fn publish<'a>(&self, post: &Item) -> Result<(), Box<dyn std::error::Error + 'a>> {
+    async fn publish<'a>(
+        &self,
+        post: &Item,
+    ) -> Result<SyndicatedPost, Box<dyn std::error::Error + 'a>> {
         log::debug!("processing post: {:?}", post);
         self.http_client
             // TODO: make mastodon instance configurable
@@ -42,7 +45,7 @@ impl Target for Mastodon {
                 let body = response.text().await;
 
                 log::debug!("response body: {:?}", body);
-                Ok(())
+                todo!()
             })
             .await
             .map_err(|error| Box::new(error) as Box<dyn std::error::Error>)

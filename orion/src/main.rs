@@ -1,7 +1,10 @@
 use std::fmt::Display;
 
 pub use crate::rss::*;
-use crate::{auth::token_db::SledTokenDB, mastodon::Mastodon, twitter::Twitter};
+use crate::{
+    auth::token_db::SledTokenDB, mastodon::Mastodon, syndicated_post::SledSyndycatedPostStorage,
+    twitter::Twitter,
+};
 use clap::Parser;
 pub use config::Config;
 use log::LevelFilter::{Debug, Info};
@@ -12,8 +15,10 @@ pub use crate::target::Target;
 mod auth;
 mod config;
 mod mastodon;
+mod provider;
 mod rss;
 mod syndicate;
+mod syndicated_post;
 mod target;
 mod twitter;
 
@@ -73,7 +78,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 )),
             ];
 
-            syndicate::syndicate(&config, Box::new(RssClientImpl), &targets).await
+            let storage = SledSyndycatedPostStorage::new();
+
+            syndicate::syndicate(&config, &RssClientImpl, &targets, &storage).await
         }
     };
 
@@ -86,5 +93,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 pub mod stubs {
     pub use crate::auth::token_db::stubs as token_db;
     pub use crate::rss::stubs as rss;
+    pub use crate::syndicated_post::stubs as syndycated_post;
     pub use crate::target::stubs as target;
 }

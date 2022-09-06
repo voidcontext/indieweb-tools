@@ -5,6 +5,7 @@ use reqwest::Client;
 use rss::Item;
 
 use crate::auth::token_db::TokenDB;
+use crate::syndicated_post::SyndicatedPost;
 use crate::{auth::oauth::AuthedClient, target::Target};
 
 pub struct Twitter<DB: TokenDB> {
@@ -41,7 +42,10 @@ struct TweetsRequest {
 
 #[async_trait(?Send)]
 impl<DB: TokenDB> Target for Twitter<DB> {
-    async fn publish<'a>(&self, post: &Item) -> Result<(), Box<dyn std::error::Error + 'a>> {
+    async fn publish<'a>(
+        &self,
+        post: &Item,
+    ) -> Result<SyndicatedPost, Box<dyn std::error::Error + 'a>> {
         log::debug!("processing post: {:?}", post);
         let request = self
             .http_client
@@ -55,7 +59,7 @@ impl<DB: TokenDB> Target for Twitter<DB> {
                 let body = response.text().await;
 
                 log::debug!("response body: {:?}", body);
-                Ok(())
+                todo!()
             })
             .await
     }

@@ -1,9 +1,14 @@
 use async_trait::async_trait;
 use rss::Item;
 
+use crate::syndicated_post::SyndicatedPost;
+
 #[async_trait(?Send)]
 pub trait Target {
-    async fn publish<'a>(&self, post: &Item) -> Result<(), Box<dyn std::error::Error + 'a>>;
+    async fn publish<'a>(
+        &self,
+        post: &Item,
+    ) -> Result<SyndicatedPost, Box<dyn std::error::Error + 'a>>;
 }
 
 #[cfg(test)]
@@ -14,19 +19,38 @@ pub mod stubs {
     use async_trait::async_trait;
     use rss::Item;
 
+    use crate::{provider::Provider, syndicated_post::SyndicatedPost};
+
     use super::Target;
 
-    #[derive(Default)]
     pub struct StubTarget {
+        pub provider: Provider,
         pub calls: Arc<Mutex<Vec<Item>>>,
+    }
+
+    impl StubTarget {
+        pub fn new(provider: Provider) -> Self {
+            Self {
+                provider,
+                calls: Default::default(),
+            }
+        }
     }
 
     #[async_trait(?Send)]
     impl Target for StubTarget {
-        async fn publish<'a>(&self, post: &Item) -> Result<(), Box<dyn std::error::Error + 'a>> {
+        async fn publish<'a>(
+            &self,
+            post: &Item,
+        ) -> Result<SyndicatedPost, Box<dyn std::error::Error + 'a>> {
             let mut calls = self.calls.lock().await;
+            let id = calls.len();
             calls.push(post.clone());
-            Ok(())
+            Ok(SyndicatedPost::new(
+                self.provider.clone(),
+                &id.to_string(),
+                post,
+            ))
         }
     }
 
@@ -51,7 +75,10 @@ pub mod stubs {
 
     #[async_trait(?Send)]
     impl Target for FailingStubTarget {
-        async fn publish<'a>(&self, _post: &Item) -> Result<(), Box<dyn std::error::Error + 'a>> {
+        async fn publish<'a>(
+            &self,
+            _post: &Item,
+        ) -> Result<SyndicatedPost, Box<dyn std::error::Error + 'a>> {
             Err(Box::new(TargetError))
         }
     }
