@@ -8,18 +8,18 @@ Orion syndicates microblog posts to Twitter and Mastodon
 Incremental builds using `cargo`:
 
 ```bash
-$ nix develop -c cargo build
+$ nix develop .. -c cargo build
 ```
 
 Running the application using cargo (incremental build)
 
 ```bash
-$ nix develop -c cargo build
+$ nix develop .. -c cargo run -- --help
 ```
 
 Running the application using nix:
 
 ```bash
-$ nix run
+$ nix run ..#orion -- --help
 ```
 
