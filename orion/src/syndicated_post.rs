@@ -1,4 +1,7 @@
+use std::rc::Rc;
+
 use rss::Item;
+use rusqlite::Connection;
 
 use crate::provider::Provider;
 
@@ -22,7 +25,9 @@ impl SyndicatedPost {
 }
 
 #[derive(Debug)]
-pub enum StorageError {}
+pub enum StorageError {
+    PersistenceError(String),
+}
 
 impl std::fmt::Display for StorageError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -36,17 +41,48 @@ pub trait SyndicatedPostStorage {
     fn store(&self, syndicated_post: SyndicatedPost) -> Result<(), StorageError>;
 }
 
-pub struct SledSyndycatedPostStorage {}
+pub struct SqliteSyndycatedPostStorage {
+    conn: Rc<Connection>,
+}
 
-impl SledSyndycatedPostStorage {
-    pub fn new() -> Self {
-        Self {}
+impl SqliteSyndycatedPostStorage {
+    pub fn new(conn: Rc<Connection>) -> Self {
+        Self { conn }
+    }
+
+    pub fn init_table(&self) -> Result<(), StorageError> {
+        self.conn
+            .execute(
+                "CREATE TABLE IF NOT EXISTS post (
+              id VARCHAR(64) NOT NULL,
+              provider VARCHAR(20) NOT NULL,
+              original_guid TEXT NOT NULL,
+              original_uri TEXT NOT NULL,
+            
+              PRIMARY KEY (id, provider)
+            )",
+                (),
+            )
+            .map(|_| ())
+            .map_err(|err| StorageError::PersistenceError(format!("{:?}", err)))
     }
 }
 
-impl SyndicatedPostStorage for SledSyndycatedPostStorage {
-    fn store(&self, _syndicated_post: SyndicatedPost) -> Result<(), StorageError> {
-        todo!()
+impl SyndicatedPostStorage for SqliteSyndycatedPostStorage {
+    fn store(&self, syndicated_post: SyndicatedPost) -> Result<(), StorageError> {
+        self.conn
+            .execute(
+                "INSERT INTO post (id, provider, original_guid, original_uri) 
+             VALUES (:id, :provider, :original_guid, :original_url)",
+                &[
+                    (":id", &syndicated_post.id),
+                    (":provider", &syndicated_post.provider.to_string()),
+                    (":original_guid", &syndicated_post.original_guid),
+                    (":original_url", &syndicated_post.original_uri),
+                ],
+            )
+            .map(|_| ())
+            .map_err(|err| StorageError::PersistenceError(format!("{:?}", err)))
     }
 }
 

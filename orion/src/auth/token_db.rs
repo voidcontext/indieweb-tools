@@ -1,4 +1,7 @@
+use std::rc::Rc;
+
 use oauth2::{AccessToken, RefreshToken};
+use rusqlite::Connection;
 
 pub trait TokenDB {
     fn get_access_token(&self, provider: &str) -> Result<AccessToken, Box<dyn std::error::Error>>;
@@ -12,22 +15,24 @@ pub trait TokenDB {
     ) -> Result<(), Box<dyn std::error::Error>>;
 }
 
-pub struct SledTokenDB {
-    db: sled::Db,
+pub struct SqliteTokenDB {
+    conn: Rc<Connection>,
 }
 
-impl SledTokenDB {
-    pub fn new(path: &str) -> Self {
-        let db = sled::open(path).expect("Cannot open sled db");
-        Self { db }
+impl SqliteTokenDB {
+    pub fn new(conn: Rc<Connection>) -> Self {
+        Self { conn }
     }
 }
 
-impl TokenDB for SledTokenDB {
+impl TokenDB for SqliteTokenDB {
     fn get_access_token(&self, provider: &str) -> Result<AccessToken, Box<dyn std::error::Error>> {
-        self.db
-            .get(bincode::serialize(&format!("auth:{}:access_token", provider)).unwrap())
-            .map(|value| bincode::deserialize::<AccessToken>(&value.unwrap()).unwrap())
+        self.conn
+            .query_row(
+                "SELECT access_token FROM auth_token WHERE provider = :provider",
+                &[(":provider", provider)],
+                |row| row.get("access_token").map(AccessToken::new),
+            )
             .map_err(|err| Box::new(err) as Box<dyn std::error::Error>)
     }
 
@@ -35,9 +40,12 @@ impl TokenDB for SledTokenDB {
         &self,
         provider: &str,
     ) -> Result<RefreshToken, Box<dyn std::error::Error>> {
-        self.db
-            .get(bincode::serialize(&format!("auth:{}:refresh_token", provider)).unwrap())
-            .map(|value| bincode::deserialize::<RefreshToken>(&value.unwrap()).unwrap())
+        self.conn
+            .query_row(
+                "SELECT refresh_token FROM auth_token WHERE provider = :provider",
+                &[(":provider", provider)],
+                |row| row.get("refresh_token").map(RefreshToken::new),
+            )
             .map_err(|err| Box::new(err) as Box<dyn std::error::Error>)
     }
 
@@ -47,17 +55,13 @@ impl TokenDB for SledTokenDB {
         access_token: &AccessToken,
         refresh_token: &RefreshToken,
     ) -> Result<(), Box<dyn std::error::Error>> {
-        self.db
-            .insert(
-                bincode::serialize(&format!("auth:{}:access_token", provider)).unwrap(),
-                bincode::serialize(&access_token).unwrap(),
-            )
-            .and_then(|_| {
-                self.db.insert(
-                    bincode::serialize(&format!("auth:{}:refresh_token", provider)).unwrap(),
-                    bincode::serialize(&refresh_token).unwrap(),
-                )
-            })
+        self.conn.execute(
+            "INSERT INTO auth_token (provider, access_token, refresh_token)
+             VALUES (?1, ?2, ?3)
+             ON CONFLICT (provider) 
+                DO UPDATE SET access_token = excluded.access_token, refresh_token = excluded.refresh_token",
+            (provider, access_token.secret(), refresh_token.secret())
+        )
             .map(|_| ())
             .map_err(|err| Box::new(err) as Box<dyn std::error::Error>)
     }

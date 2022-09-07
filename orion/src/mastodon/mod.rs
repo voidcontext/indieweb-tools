@@ -1,4 +1,4 @@
-use crate::{syndicated_post::SyndicatedPost, target::Target};
+use crate::{provider::Provider, syndicated_post::SyndicatedPost, target::Target};
 use async_trait::async_trait;
 use futures::TryFutureExt;
 use oauth2::AccessToken;
@@ -26,6 +26,11 @@ struct UpdateStatusRequest {
     status: String,
 }
 
+#[derive(serde::Deserialize)]
+struct MastodonResponse {
+    id: String,
+}
+
 #[async_trait(?Send)]
 impl Target for Mastodon {
     async fn publish<'a>(
@@ -41,13 +46,14 @@ impl Target for Mastodon {
                 status: post.description().unwrap().to_owned(),
             })
             .send()
+            .map_err(|err| Box::new(err) as Box<dyn std::error::Error>)
             .and_then(|response| async {
-                let body = response.text().await;
+                let body = response.text().await.expect("Response body expected");
 
-                log::debug!("response body: {:?}", body);
-                todo!()
+                serde_json::from_str::<MastodonResponse>(&body)
+                    .map(|response| SyndicatedPost::new(Provider::Mastodon, &response.id, post))
+                    .map_err(|err| Box::new(err) as Box<dyn std::error::Error>)
             })
             .await
-            .map_err(|error| Box::new(error) as Box<dyn std::error::Error>)
     }
 }

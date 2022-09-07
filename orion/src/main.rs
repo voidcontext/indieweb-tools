@@ -1,13 +1,14 @@
-use std::fmt::Display;
+use std::{fmt::Display, rc::Rc};
 
 pub use crate::rss::*;
 use crate::{
-    auth::token_db::SledTokenDB, mastodon::Mastodon, syndicated_post::SledSyndycatedPostStorage,
-    twitter::Twitter,
+    auth::token_db::SqliteTokenDB, mastodon::Mastodon,
+    syndicated_post::SqliteSyndycatedPostStorage, twitter::Twitter,
 };
 use clap::Parser;
 pub use config::Config;
 use log::LevelFilter::{Debug, Info};
+use rusqlite::Connection;
 use simple_logger::SimpleLogger;
 
 pub use crate::target::Target;
@@ -67,8 +68,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
         Ok(config) => {
             log::debug!("Config loaded");
+            let conn = Rc::new(Connection::open(&config.db.path).expect("Couldn't open DB"));
 
-            let token_db = SledTokenDB::new(&config.db.path);
+            let token_db = SqliteTokenDB::new(Rc::clone(&conn));
 
             let targets: Vec<Box<dyn Target>> = vec![
                 Box::new(Twitter::new(config.twitter.client_id.clone(), token_db)),
@@ -78,7 +80,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 )),
             ];
 
-            let storage = SledSyndycatedPostStorage::new();
+            let storage = SqliteSyndycatedPostStorage::new(Rc::clone(&conn));
+            storage
+                .init_table()
+                .expect("Couldn't initialise post storage");
 
             syndicate::syndicate(&config, &RssClientImpl, &targets, &storage).await
         }

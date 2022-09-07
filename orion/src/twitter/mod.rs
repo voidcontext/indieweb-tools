@@ -5,6 +5,7 @@ use reqwest::Client;
 use rss::Item;
 
 use crate::auth::token_db::TokenDB;
+use crate::provider::Provider;
 use crate::syndicated_post::SyndicatedPost;
 use crate::{auth::oauth::AuthedClient, target::Target};
 
@@ -17,7 +18,7 @@ impl<DB: TokenDB> Twitter<DB> {
     pub fn new(client_id: ClientId, db: DB) -> Self {
         Self {
             authed_client: AuthedClient::new(
-                String::from("twitter"),
+                Provider::Twitter.to_string(),
                 BasicClient::new(
                     client_id,
                     None,
@@ -40,6 +41,16 @@ struct TweetsRequest {
     text: String,
 }
 
+#[derive(serde::Deserialize)]
+struct TweetResponse {
+    data: TweetResponseData,
+}
+
+#[derive(serde::Deserialize)]
+struct TweetResponseData {
+    id: String,
+}
+
 #[async_trait(?Send)]
 impl<DB: TokenDB> Target for Twitter<DB> {
     async fn publish<'a>(
@@ -53,13 +64,15 @@ impl<DB: TokenDB> Target for Twitter<DB> {
             .json(&TweetsRequest {
                 text: post.description().unwrap().to_owned(),
             });
+
         self.authed_client
             .authed_request(request.build().unwrap())
             .and_then(|response| async {
-                let body = response.text().await;
+                let body = response.text().await.expect("Body should be available");
 
-                log::debug!("response body: {:?}", body);
-                todo!()
+                serde_json::from_str::<TweetResponse>(&body)
+                    .map(|response| SyndicatedPost::new(Provider::Twitter, &response.data.id, post))
+                    .map_err(|err| Box::new(err) as Box<dyn std::error::Error>)
             })
             .await
     }
