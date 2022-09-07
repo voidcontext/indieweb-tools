@@ -134,18 +134,18 @@ fn persist_tokens(tokens: &TokenResponse, db_path: &String) -> rusqlite::Result<
 
     conn.execute(
         "CREATE TABLE IF NOT EXISTS auth_token (
-            provider      VARCHAR(20) PRIMARY KEY,
-            access_token  TEXT,
-            refresh_token TEXT
+            social_network VARCHAR(20) PRIMARY KEY,
+            access_token   TEXT,
+            refresh_token  TEXT
         )
         ",
         (),
     )?;
 
     conn.execute(
-        "INSERT INTO auth_token (provider, access_token, refresh_token)
+        "INSERT INTO auth_token (social_network, access_token, refresh_token)
          VALUES (?1, ?2, ?3)
-         ON CONFLICT (provider) 
+         ON CONFLICT (social_network) 
             DO UPDATE SET access_token = excluded.access_token, refresh_token = excluded.refresh_token",
         ("twitter", tokens.access_token.clone(), tokens.refresh_token.clone()) 
     )?;

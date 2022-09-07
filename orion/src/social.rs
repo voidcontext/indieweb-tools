@@ -1,16 +1,16 @@
 use std::fmt::Display;
 
 #[derive(Debug, PartialEq, Eq, Clone, PartialOrd, Ord)]
-pub enum Provider {
+pub enum Network {
     Twitter,
     Mastodon,
 }
 
-impl Display for Provider {
+impl Display for Network {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Provider::Twitter => write!(f, "twitter"),
-            Provider::Mastodon => write!(f, "mastodon"),
+            Network::Twitter => write!(f, "twitter"),
+            Network::Mastodon => write!(f, "mastodon"),
         }
     }
 }

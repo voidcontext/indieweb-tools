@@ -19,19 +19,19 @@ pub mod stubs {
     use async_trait::async_trait;
     use rss::Item;
 
-    use crate::{provider::Provider, syndicated_post::SyndicatedPost};
+    use crate::{social::Network, syndicated_post::SyndicatedPost};
 
     use super::Target;
 
     pub struct StubTarget {
-        pub provider: Provider,
+        pub social_network: Network,
         pub calls: Arc<Mutex<Vec<Item>>>,
     }
 
     impl StubTarget {
-        pub fn new(provider: Provider) -> Self {
+        pub fn new(social_network: Network) -> Self {
             Self {
-                provider,
+                social_network,
                 calls: Default::default(),
             }
         }
@@ -47,7 +47,7 @@ pub mod stubs {
             let id = calls.len();
             calls.push(post.clone());
             Ok(SyndicatedPost::new(
-                self.provider.clone(),
+                self.social_network.clone(),
                 &id.to_string(),
                 post,
             ))

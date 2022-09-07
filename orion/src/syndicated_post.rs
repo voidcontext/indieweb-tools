@@ -3,20 +3,20 @@ use std::rc::Rc;
 use rss::Item;
 use rusqlite::Connection;
 
-use crate::provider::Provider;
+use crate::social::Network;
 
 #[derive(Debug, PartialEq)]
 pub struct SyndicatedPost {
-    pub provider: Provider,
+    pub social_network: Network,
     pub id: String,
     pub original_guid: String,
     pub original_uri: String,
 }
 
 impl SyndicatedPost {
-    pub fn new(provider: Provider, id: &String, item: &Item) -> Self {
+    pub fn new(social_network: Network, id: &String, item: &Item) -> Self {
         Self {
-            provider,
+            social_network,
             id: String::from(id),
             original_guid: String::from(item.guid().unwrap().value()),
             original_uri: String::from(item.link().unwrap()),
@@ -55,11 +55,11 @@ impl SqliteSyndycatedPostStorage {
             .execute(
                 "CREATE TABLE IF NOT EXISTS post (
               id VARCHAR(64) NOT NULL,
-              provider VARCHAR(20) NOT NULL,
+              social_network VARCHAR(20) NOT NULL,
               original_guid TEXT NOT NULL,
               original_uri TEXT NOT NULL,
             
-              PRIMARY KEY (id, provider)
+              PRIMARY KEY (id, social_network)
             )",
                 (),
             )
@@ -72,11 +72,14 @@ impl SyndicatedPostStorage for SqliteSyndycatedPostStorage {
     fn store(&self, syndicated_post: SyndicatedPost) -> Result<(), StorageError> {
         self.conn
             .execute(
-                "INSERT INTO post (id, provider, original_guid, original_uri) 
-             VALUES (:id, :provider, :original_guid, :original_url)",
+                "INSERT INTO post (id, social_network, original_guid, original_uri) 
+             VALUES (:id, :social_network, :original_guid, :original_url)",
                 &[
                     (":id", &syndicated_post.id),
-                    (":provider", &syndicated_post.provider.to_string()),
+                    (
+                        ":social_network",
+                        &syndicated_post.social_network.to_string(),
+                    ),
                     (":original_guid", &syndicated_post.original_guid),
                     (":original_url", &syndicated_post.original_uri),
                 ],

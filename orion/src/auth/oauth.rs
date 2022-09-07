@@ -1,5 +1,7 @@
 use async_mutex::Mutex;
 
+use crate::social::Network;
+
 use super::token_db::TokenDB;
 use oauth2::{
     basic::BasicClient, http::HeaderValue, reqwest::async_http_client, AccessToken, RefreshToken,
@@ -15,24 +17,24 @@ struct TokenCredentials {
 pub struct AuthedClient<DB: TokenDB> {
     oauth_client: BasicClient,
     db: DB,
-    provider: String,
+    social_network: Network,
     http_client: Client,
     // TODO: do we need this async mutex here? Couldn't we use TokenDB / sled directly?
     tokens: Mutex<TokenCredentials>,
 }
 
 impl<DB: TokenDB> AuthedClient<DB> {
-    pub fn new(provider: String, oauth_client: BasicClient, db: DB) -> Self {
+    pub fn new(social_network: Network, oauth_client: BasicClient, db: DB) -> Self {
         let access_token = db
-            .get_access_token(&provider)
+            .get_access_token(&social_network)
             .expect("Couldn't load access token");
         let refresh_token = db
-            .get_refresh_token(&provider)
+            .get_refresh_token(&social_network)
             .expect("Couldn't load refresh token");
         Self {
             oauth_client,
             db,
-            provider,
+            social_network,
             http_client: reqwest::Client::new(),
             tokens: Mutex::new(TokenCredentials {
                 access_token,
@@ -121,7 +123,11 @@ impl<DB: TokenDB> AuthedClient<DB> {
                 );
 
                 self.db
-                    .store(&self.provider, &tokens.access_token, &tokens.refresh_token)
+                    .store(
+                        &self.social_network,
+                        &tokens.access_token,
+                        &tokens.refresh_token,
+                    )
                     .map(|_| tokens)
             }
         }
@@ -130,7 +136,7 @@ impl<DB: TokenDB> AuthedClient<DB> {
 
 #[cfg(test)]
 mod test {
-    use crate::auth::token_db::TokenDB;
+    use crate::{auth::token_db::TokenDB, social::Network};
     use oauth2::{basic::BasicClient, AuthUrl, ClientId, TokenUrl};
     use reqwest::{Method, Request, StatusCode, Url};
     use wiremock::{
@@ -153,11 +159,7 @@ mod test {
     }
 
     fn create_authed_client(base_url: &str) -> AuthedClient<StubTokenDB> {
-        AuthedClient::new(
-            String::from("acme-inc"),
-            basic_client(base_url),
-            StubTokenDB::new(),
-        )
+        AuthedClient::new(Network::Twitter, basic_client(base_url), StubTokenDB::new())
     }
 
     #[tokio::test]
@@ -306,7 +308,7 @@ mod test {
             "new-access-token",
             authed_client
                 .db
-                .get_access_token("acme-inc")
+                .get_access_token(&Network::Twitter)
                 .unwrap()
                 .secret(),
         );
@@ -315,7 +317,7 @@ mod test {
             "new-refresh-token",
             authed_client
                 .db
-                .get_refresh_token("acme-inc")
+                .get_refresh_token(&Network::Twitter)
                 .unwrap()
                 .secret(),
         );

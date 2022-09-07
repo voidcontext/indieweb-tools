@@ -33,7 +33,7 @@ enum Commands {
     /// Start an Oauth 2.0 app authentication flow
     Auth {
         #[clap(subcommand)]
-        provider: AuthSubcommands,
+        social_network: AuthSubcommands,
     },
 }
 
@@ -78,7 +78,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     SimpleLogger::new().with_level(log_level).init().unwrap();
 
     match cli.command {
-        Commands::Auth { provider } => match provider {
+        Commands::Auth { social_network } => match social_network {
             AuthSubcommands::Twitter => twitter::start_flow(&config, cli.db_path)
                 .await
                 .map_err(|e| Box::new(e) as Box<dyn std::error::Error>),

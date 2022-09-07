@@ -5,7 +5,7 @@ use reqwest::Client;
 use rss::Item;
 
 use crate::auth::token_db::TokenDB;
-use crate::provider::Provider;
+use crate::social::Network;
 use crate::syndicated_post::SyndicatedPost;
 use crate::{auth::oauth::AuthedClient, target::Target};
 
@@ -18,7 +18,7 @@ impl<DB: TokenDB> Twitter<DB> {
     pub fn new(client_id: ClientId, db: DB) -> Self {
         Self {
             authed_client: AuthedClient::new(
-                Provider::Twitter.to_string(),
+                Network::Twitter,
                 BasicClient::new(
                     client_id,
                     None,
@@ -71,7 +71,7 @@ impl<DB: TokenDB> Target for Twitter<DB> {
                 let body = response.text().await.expect("Body should be available");
 
                 serde_json::from_str::<TweetResponse>(&body)
-                    .map(|response| SyndicatedPost::new(Provider::Twitter, &response.data.id, post))
+                    .map(|response| SyndicatedPost::new(Network::Twitter, &response.data.id, post))
                     .map_err(|err| Box::new(err) as Box<dyn std::error::Error>)
             })
             .await

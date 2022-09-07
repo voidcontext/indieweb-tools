@@ -1,4 +1,4 @@
-use crate::{provider::Provider, syndicated_post::SyndicatedPost, target::Target};
+use crate::{social::Network, syndicated_post::SyndicatedPost, target::Target};
 use async_trait::async_trait;
 use futures::TryFutureExt;
 use oauth2::AccessToken;
@@ -51,7 +51,7 @@ impl Target for Mastodon {
                 let body = response.text().await.expect("Response body expected");
 
                 serde_json::from_str::<MastodonResponse>(&body)
-                    .map(|response| SyndicatedPost::new(Provider::Mastodon, &response.id, post))
+                    .map(|response| SyndicatedPost::new(Network::Mastodon, &response.id, post))
                     .map_err(|err| Box::new(err) as Box<dyn std::error::Error>)
             })
             .await

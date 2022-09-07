@@ -69,7 +69,7 @@ mod test {
     use oauth2::{AccessToken, ClientId};
 
     use crate::config::{DBConfig, MastodonConfig, TwitterConfig};
-    use crate::provider::Provider;
+    use crate::social::Network;
     use crate::stubs::rss::{default_items, StubRssClient};
     use crate::stubs::syndycated_post::SyndicatedPostStorageStub;
     use crate::stubs::target::StubTarget;
@@ -102,7 +102,7 @@ mod test {
 
         let client = StubRssClient::default();
         let client_calls = Arc::clone(&client.urls);
-        let stub_target = StubTarget::new(Provider::Mastodon);
+        let stub_target = StubTarget::new(Network::Mastodon);
         let targets = vec![stub_target.into()];
 
         syndicate(
@@ -127,7 +127,7 @@ mod test {
 
         let client = StubRssClient::default();
         let client_calls = Arc::clone(&client.urls);
-        let stub_target = StubTarget::new(Provider::Mastodon);
+        let stub_target = StubTarget::new(Network::Mastodon);
         let targets = vec![stub_target.into()];
 
         syndicate(
@@ -150,7 +150,7 @@ mod test {
         let config = config(vec![feed.to_string()]);
 
         let client = StubRssClient::default();
-        let stub_target = StubTarget::new(Provider::Mastodon);
+        let stub_target = StubTarget::new(Network::Mastodon);
         let target_calls = Arc::clone(&stub_target.calls);
         let targets = vec![stub_target.into()];
 
@@ -175,9 +175,9 @@ mod test {
         let config = config(vec![feed1.to_string(), feed2.to_string()]);
 
         let client = StubRssClient::default();
-        let stub_target1 = StubTarget::new(Provider::Mastodon);
+        let stub_target1 = StubTarget::new(Network::Mastodon);
         let target_calls1 = Arc::clone(&stub_target1.calls);
-        let stub_target2 = StubTarget::new(Provider::Twitter);
+        let stub_target2 = StubTarget::new(Network::Twitter);
         let target_calls2 = Arc::clone(&stub_target2.calls);
 
         let targets = vec![stub_target1.into(), stub_target2.into()];
@@ -208,9 +208,9 @@ mod test {
         let config = config(vec![feed1.to_string(), feed2.to_string()]);
 
         let client = StubRssClient::default();
-        let stub_target1 = StubTarget::new(Provider::Mastodon);
+        let stub_target1 = StubTarget::new(Network::Mastodon);
         let target_calls1 = Arc::clone(&stub_target1.calls);
-        let stub_target2 = StubTarget::new(Provider::Twitter);
+        let stub_target2 = StubTarget::new(Network::Twitter);
         let target_calls2 = Arc::clone(&stub_target2.calls);
 
         let targets = vec![stub_target1.into(), stub_target2.into()];
@@ -240,7 +240,7 @@ mod test {
 
         let client = StubRssClient::default();
         let stub_target1 = FailingStubTarget::default();
-        let stub_target2 = StubTarget::new(Provider::Mastodon);
+        let stub_target2 = StubTarget::new(Network::Mastodon);
         let target_calls2 = Arc::clone(&stub_target2.calls);
 
         let targets = vec![stub_target1.into(), stub_target2.into()];
@@ -269,8 +269,8 @@ mod test {
         let config = config(vec![feed1.to_string(), feed2.to_string()]);
 
         let client = StubRssClient::default();
-        let stub_target1 = StubTarget::new(Provider::Mastodon);
-        let stub_target2 = StubTarget::new(Provider::Twitter);
+        let stub_target1 = StubTarget::new(Network::Mastodon);
+        let stub_target2 = StubTarget::new(Network::Twitter);
 
         let targets = vec![stub_target1.into(), stub_target2.into()];
         let storage = SyndicatedPostStorageStub::default();
@@ -286,7 +286,7 @@ mod test {
             .iter()
             .enumerate()
             .map(|(i, item)| SyndicatedPost {
-                provider: Provider::Mastodon,
+                social_network: Network::Mastodon,
                 id: i.to_string(),
                 original_guid: String::from(item.guid().unwrap().value()),
                 original_uri: String::from(item.link().unwrap()),
@@ -298,7 +298,7 @@ mod test {
                 .iter()
                 .enumerate()
                 .map(|(i, item)| SyndicatedPost {
-                    provider: Provider::Twitter,
+                    social_network: Network::Twitter,
                     id: i.to_string(),
                     original_guid: String::from(item.guid().unwrap().value()),
                     original_uri: String::from(item.link().unwrap()),
@@ -309,8 +309,20 @@ mod test {
         let mut posts = storage.posts.lock().unwrap();
         // Sort vecs as the order doesn't matter
         // TODO: maybe use HashSet?
-        expected.sort_by_key(|i| (i.provider.clone(), i.id.clone(), i.original_uri.clone()));
-        posts.sort_by_key(|i| (i.provider.clone(), i.id.clone(), i.original_uri.clone()));
+        expected.sort_by_key(|i| {
+            (
+                i.social_network.clone(),
+                i.id.clone(),
+                i.original_uri.clone(),
+            )
+        });
+        posts.sort_by_key(|i| {
+            (
+                i.social_network.clone(),
+                i.id.clone(),
+                i.original_uri.clone(),
+            )
+        });
 
         assert_eq!(posts.len(), expected.len());
         assert_eq!(*posts, expected);
