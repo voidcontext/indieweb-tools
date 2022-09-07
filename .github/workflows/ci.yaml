@@ -7,29 +7,9 @@ on:
     branches: [ main ]
 
 jobs:
-  flake-check-orion:
+  flake-check:
 
     runs-on: ubuntu-latest
-
-    defaults:
-      run:
-        working-directory: orion
-
-    steps:
-    - name: Checkout
-      uses: actions/checkout@v3
-    - name: Install Nix
-      uses: cachix/install-nix-action@v17
-    - name: Flake Check
-      run: nix flake check
-
-  flake-app-auth:
-
-    runs-on: ubuntu-latest
-
-    defaults:
-      run:
-        working-directory: app-auth
 
     steps:
     - name: Checkout

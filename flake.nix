@@ -29,14 +29,22 @@
         (optional (system == "x86_64-darwin")
           pkgs.darwin.apple_sdk.frameworks.Security);
 
-      twitter-auth = nix-utils.rust.${system}.mkRustBinary pkgs {
-        src = ./.;
+      orion = nix-utils.rust.${system}.mkRustBinary pkgs {
+        src = ./orion;
+        inherit rust nativeBuildInputs buildInputs;
+      };
+    
+      app-auth = nix-utils.rust.${system}.mkRustBinary pkgs {
+        src = ./app-auth;
         inherit rust nativeBuildInputs buildInputs;
       };
     in
     rec {
-      packages.default = twitter-auth;
-      checks.default = twitter-auth;
+      packages.orion = orion;
+      checks.orion = orion;
+      
+      packages.app-auth = app-auth;
+      checks.app-auth = app-auth;
 
       devShells.default = pkgs.mkShell {
         buildInputs = nativeBuildInputs ++ buildInputs ++ [
