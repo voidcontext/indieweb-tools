@@ -13,7 +13,6 @@ use log::LevelFilter::{Debug, Info};
 use rusqlite::Connection;
 use simple_logger::SimpleLogger;
 
-mod auth;
 mod config;
 mod mastodon;
 mod rss;
@@ -69,7 +68,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             log::debug!("Config loaded");
             let conn = Rc::new(Connection::open(&config.db.path).expect("Couldn't open DB"));
 
-            let token_db = SqliteTokenDB::new(Rc::clone(&conn));
+            let token_db = Rc::new(SqliteTokenDB::new(Rc::clone(&conn)));
 
             let targets: Vec<Box<dyn Target>> = vec![
                 Box::new(Twitter::new(config.twitter.client_id.clone(), token_db)),
@@ -95,7 +94,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 #[cfg(test)]
 pub mod stubs {
-    pub use crate::auth::token_db::stubs as token_db;
     pub use crate::rss::stubs as rss;
     pub use crate::syndicated_post::stubs as syndycated_post;
     pub use crate::target::stubs as target;

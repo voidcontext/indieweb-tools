@@ -1,0 +1,9 @@
+[workspace]
+members = [
+  "app-auth",
+  "janitor",
+  "orion",
+  "shared/commons",
+  "shared/social/mastodon",
+  "shared/social/twitter",
+]

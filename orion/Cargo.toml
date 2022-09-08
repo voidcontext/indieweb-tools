@@ -18,7 +18,7 @@ reqwest = {version = "0.11.11", features = ["json"]}
 tokio = { version = "1.20.0", features = ["full"] }
 futures = "0.3.14"
 async-trait = "0.1.56"
-oauth2 = "4.2.3"
+oauth2 = "4.2.3" #maybe we should re-export the models we need
 async-mutex = "1.4.0"
 rusqlite = { version = "0.28.0", features = ["bundled"] }
 
@@ -27,3 +27,6 @@ iwt_commons = { path = "../shared/commons" }
 [dev-dependencies]
 url = "2.2.2"
 wiremock = "0.5"
+iwt_commons = { path = "../shared/commons" }
+iwt_commons_stubs = { path = "../shared/commons/stubs" }
+

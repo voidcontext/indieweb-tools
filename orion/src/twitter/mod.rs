@@ -1,3 +1,5 @@
+use std::rc::Rc;
+
 use async_trait::async_trait;
 use futures::TryFutureExt;
 use oauth2::{basic::BasicClient, AuthUrl, ClientId, TokenUrl};
@@ -15,7 +17,7 @@ pub struct Twitter<DB: TokenDB> {
 }
 
 impl<DB: TokenDB> Twitter<DB> {
-    pub fn new(client_id: ClientId, db: DB) -> Self {
+    pub fn new(client_id: ClientId, db: Rc<DB>) -> Self {
         Self {
             authed_client: AuthedClient::new(
                 Network::Twitter,
