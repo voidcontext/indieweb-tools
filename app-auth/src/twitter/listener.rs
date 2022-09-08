@@ -10,6 +10,7 @@ use axum::{
     routing::get,
     Extension, Router,
 };
+use iwt_commons::social::Network::Twitter;
 use rusqlite::Connection;
 use serde_derive::Deserialize;
 use tokio::sync::mpsc::Sender;
@@ -147,7 +148,7 @@ fn persist_tokens(tokens: &TokenResponse, db_path: &String) -> rusqlite::Result<
          VALUES (?1, ?2, ?3)
          ON CONFLICT (social_network) 
             DO UPDATE SET access_token = excluded.access_token, refresh_token = excluded.refresh_token",
-        ("twitter", tokens.access_token.clone(), tokens.refresh_token.clone()) 
+        (Twitter.to_string().as_str(), tokens.access_token.clone(), tokens.refresh_token.clone())
     )?;
 
     Ok(())

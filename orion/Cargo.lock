@@ -784,6 +784,10 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "112c678d4050afce233f4f2852bb2eb519230b3cf12f33585275537d7e41578d"
 
 [[package]]
+name = "iwt_commons"
+version = "0.1.0"
+
+[[package]]
 name = "js-sys"
 version = "0.3.58"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1005,6 +1009,7 @@ dependencies = [
  "async-trait",
  "clap",
  "futures",
+ "iwt_commons",
  "log",
  "oauth2",
  "reqwest",

@@ -28,14 +28,17 @@
         (optional pkgs.stdenv.isLinux pkgs.openssl) ++
         (optional (system == "x86_64-darwin")
           pkgs.darwin.apple_sdk.frameworks.Security);
-
-      orion = nix-utils.rust.${system}.mkRustBinary pkgs {
-        src = ./orion;
-        inherit rust nativeBuildInputs buildInputs;
+          
+      mkCrate = crateRoot : nix-utils.rust.${system}.mkRustBinary pkgs {
+        src = ./.;
+        inherit rust nativeBuildInputs buildInputs crateRoot;
       };
-    
-      app-auth = nix-utils.rust.${system}.mkRustBinary pkgs {
-        src = ./app-auth;
+
+      orion = mkCrate "orion";
+      app-auth = mkCrate "app-auth";
+      
+      shared.commons = nix-utils.rust.${system}.mkRustBinary pkgs {
+        src = ./shared/commons;
         inherit rust nativeBuildInputs buildInputs;
       };
     in
@@ -45,6 +48,8 @@
       
       packages.app-auth = app-auth;
       checks.app-auth = app-auth;
+      
+      packages.shared-commons = shared.commons;
 
       devShells.default = pkgs.mkShell {
         buildInputs = nativeBuildInputs ++ buildInputs ++ [
