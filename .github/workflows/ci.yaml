@@ -21,7 +21,5 @@ jobs:
       with:
         name: indieweb-tools
         authToken: ${{ secrets.CACHIX_TOKEN }}
-    - name: Use cache
-      run: cachix use indieweb-tools
     - name: Flake Check
       run: nix flake check
