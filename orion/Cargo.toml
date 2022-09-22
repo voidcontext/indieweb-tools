@@ -21,6 +21,7 @@ async-trait = "0.1.56"
 oauth2 = "4.2.3" #maybe we should re-export the models we need
 async-mutex = "1.4.0"
 rusqlite = { version = "0.28.0", features = ["bundled"] }
+htmlentity = "1.2.0"
 
 iwt_commons = { path = "../shared/commons" }
 

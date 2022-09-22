@@ -20,7 +20,17 @@ impl RssClient for RssClientImpl {
 
         log::debug!("Response received from url: {}", url);
 
-        let channel = Channel::read_from(&feed[..])?;
+        let mut channel = Channel::read_from(&feed[..])?;
+        
+        for item in channel.items_mut() {
+            if let Some(description) = item.description.clone() {
+                let str = description.clone();
+                let decoded = htmlentity::entity::decode(&str.as_str()).iter().collect::<String>();
+                println!("{}", decoded);
+                item.set_description(decoded);
+            }
+        }
+
         log::debug!(
             "Successfully loaded channel \"{}\", with {} items",
             channel.title(),
