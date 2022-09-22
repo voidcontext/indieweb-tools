@@ -20,6 +20,10 @@ axum = "0.5.13"
 base64 = "0.13.0"
 rand = {version = "0.8.5", features = [ "getrandom" ]}
 url = "2.2.2"
-rusqlite = { version = "0.28.0", features = ["bundled"] }
+rusqlite = {version = "0.28.0", features = ["buildtime_bindgen", "bundled"]}
 
 iwt_commons = { path = "../shared/commons" }
+
+[package.metadata.nix]
+build = true
+app = true

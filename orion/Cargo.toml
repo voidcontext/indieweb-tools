@@ -20,7 +20,7 @@ futures = "0.3.14"
 async-trait = "0.1.56"
 oauth2 = "4.2.3" #maybe we should re-export the models we need
 async-mutex = "1.4.0"
-rusqlite = { version = "0.28.0", features = ["bundled"] }
+rusqlite = {version = "0.28.0", features = ["buildtime_bindgen", "bundled"]}
 
 iwt_commons = { path = "../shared/commons" }
 
@@ -30,3 +30,6 @@ wiremock = "0.5"
 iwt_commons = { path = "../shared/commons" }
 iwt_commons_stubs = { path = "../shared/commons/stubs" }
 
+[package.metadata.nix]
+build = true
+app = true
