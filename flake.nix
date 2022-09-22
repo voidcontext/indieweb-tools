@@ -30,10 +30,22 @@
           
       craneLib = (inputs.crane.mkLib pkgs).overrideToolchain rust;
       
+      commonArgs = {
+        src = craneLib.cleanCargoSource ./.;
+        
+        inherit buildInputs nativeBuildInputs;
+      };
+      
+      
+      indieweb-tools-deps = craneLib.buildDepsOnly (commonArgs // {
+        pname = "indieweb-tools";
+      });
+      
       indieweb-tools = craneLib.buildPackage {
         src = craneLib.cleanCargoSource ./.;
         pname = "indieweb-tools";
         version = "0.1.0";
+        cargoArtifacts = indieweb-tools-deps;
         
         inherit buildInputs nativeBuildInputs;
       };
@@ -54,6 +66,7 @@
       apps = (mkApp "orion") // (mkApp "app-auth") // (mkApp "janitor");
     
       packages.default = indieweb-tools;
+      packages.indieweb-tools-deps = indieweb-tools-deps;
 
       devShells.default = pkgs.mkShell {
         buildInputs = nativeBuildInputs ++ buildInputs ++ [
