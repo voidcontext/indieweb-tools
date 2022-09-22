@@ -25,5 +25,3 @@ jobs:
       run: cachix use indieweb-tools
     - name: Flake Check
       run: nix flake check
-    - name: Push deps
-      run: nix path-info .#indieweb-tools-deps | cachix push indieweb-toolsx
