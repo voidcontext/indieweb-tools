@@ -9,11 +9,10 @@
   inputs.rust-overlay.url = "github:oxalica/rust-overlay";
   inputs.rust-overlay.inputs.nixpkgs.follows = "nixpkgs";
 
-  inputs.nix-utils.url = "git+https://github.com/voidcontext/nix-utils";
-  inputs.nix-utils.inputs.nixpkgs.follows = "nixpkgs";
-  inputs.nix-utils.inputs.rust-overlay.follows = "rust-overlay";
+  inputs.crane.url = "github:ipetkov/crane";
+  inputs.crane.inputs.nixpkgs.follows = "nixpkgs";
 
-  outputs = { self, nix-utils, ... }@inputs: inputs.flake-utils.lib.eachDefaultSystem (system:
+  outputs = { self, crane, ... }@inputs: inputs.flake-utils.lib.eachDefaultSystem (system:
     let
       overlays = [ inputs.rust-overlay.overlays.default ];
 
@@ -29,27 +28,32 @@
         (optional (system == "x86_64-darwin")
           pkgs.darwin.apple_sdk.frameworks.Security);
           
-      mkCrate = crateRoot : nix-utils.rust.${system}.mkRustBinary pkgs {
-        src = ./.;
-        inherit rust nativeBuildInputs buildInputs crateRoot;
-      };
-
-      orion = mkCrate "orion";
-      app-auth = mkCrate "app-auth";
+      craneLib = (inputs.crane.mkLib pkgs).overrideToolchain rust;
       
-      shared.commons = nix-utils.rust.${system}.mkRustBinary pkgs {
-        src = ./shared/commons;
-        inherit rust nativeBuildInputs buildInputs;
+      indieweb-tools = craneLib.buildPackage {
+        src = craneLib.cleanCargoSource ./.;
+        pname = "indieweb-tools";
+        version = "0.1.0";
+        
+        inherit buildInputs nativeBuildInputs;
+      };
+          
+      mkApp = name: {
+        "${name}" = {
+          type = "app";
+          program = "${indieweb-tools}/bin/${name}";
+        };
       };
     in
     rec {
-      packages.orion = orion;
-      checks.orion = orion;
+    
+      checks = {
+        inherit indieweb-tools;
+      };
       
-      packages.app-auth = app-auth;
-      checks.app-auth = app-auth;
-      
-      packages.shared-commons = shared.commons;
+      apps = (mkApp "orion") // (mkApp "app-auth") // (mkApp "janitor");
+    
+      packages.default = indieweb-tools;
 
       devShells.default = pkgs.mkShell {
         buildInputs = nativeBuildInputs ++ buildInputs ++ [
