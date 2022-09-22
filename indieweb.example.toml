@@ -1,0 +1,14 @@
+[rss]
+urls = [ "http://example.com/rss.xml" ]
+
+[db]
+path = "indieweb.db"
+
+[twitter]
+# only the client id is required here, access and resfresh tokens should be stored in the db so they
+# can be updated
+client_id = "your_client_id..."
+
+[mastodon]
+base_uri = "http://your-mastodon-instance.example.com"
+access_token = "your_access_token..."
