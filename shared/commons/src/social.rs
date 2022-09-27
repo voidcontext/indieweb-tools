@@ -1,5 +1,9 @@
 use std::fmt::Display;
 
+use rusqlite::types::{FromSql, FromSqlError};
+
+use crate::SqlConversionError;
+
 #[derive(Debug, PartialEq, Eq, Clone, PartialOrd, Ord)]
 pub enum Network {
     Twitter,
@@ -12,5 +16,17 @@ impl Display for Network {
             Network::Twitter => write!(f, "twitter"),
             Network::Mastodon => write!(f, "mastodon"),
         }
+    }
+}
+
+impl FromSql for Network {
+    fn column_result(value: rusqlite::types::ValueRef<'_>) -> rusqlite::types::FromSqlResult<Self> {
+        value.as_str().and_then(|n| match n {
+            "twitter" => Ok(Network::Twitter),
+            "mastodon" => Ok(Network::Mastodon),
+            n => Err(FromSqlError::Other(Box::new(SqlConversionError {
+                message: format!("Unknown social network: {}", n),
+            }))),
+        })
     }
 }

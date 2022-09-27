@@ -46,6 +46,9 @@
         pname = "indieweb-tools";
         version = "0.1.0";
         cargoArtifacts = indieweb-tools-deps;
+        preCheck = ''
+        cargo fmt --check
+        '';
         
         inherit buildInputs nativeBuildInputs;
       };

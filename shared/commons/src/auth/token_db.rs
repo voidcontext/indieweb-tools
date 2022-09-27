@@ -76,4 +76,3 @@ impl TokenDB for SqliteTokenDB {
             .map_err(|err| Box::new(err) as Box<dyn std::error::Error>)
     }
 }
-

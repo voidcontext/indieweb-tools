@@ -5,7 +5,7 @@ use rusqlite::Connection;
 
 use crate::social::Network;
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)] // TODO: Clone is only needed for the tests
 pub struct SyndicatedPost {
     pub social_network: Network,
     pub id: String,
@@ -27,6 +27,7 @@ impl SyndicatedPost {
 #[derive(Debug)]
 pub enum StorageError {
     PersistenceError(String),
+    SqlError(rusqlite::Error),
 }
 
 impl std::fmt::Display for StorageError {
@@ -35,10 +36,21 @@ impl std::fmt::Display for StorageError {
     }
 }
 
+impl From<rusqlite::Error> for StorageError {
+    fn from(e: rusqlite::Error) -> Self {
+        StorageError::SqlError(e)
+    }
+}
+
 impl std::error::Error for StorageError {}
 
 pub trait SyndicatedPostStorage {
     fn store(&self, syndicated_post: SyndicatedPost) -> Result<(), StorageError>;
+    fn find(
+        &self,
+        original_guid: &String,
+        social_network: &Network,
+    ) -> Result<Option<SyndicatedPost>, StorageError>;
 }
 
 pub struct SqliteSyndycatedPostStorage {
@@ -73,7 +85,7 @@ impl SyndicatedPostStorage for SqliteSyndycatedPostStorage {
         self.conn
             .execute(
                 "INSERT INTO post (id, social_network, original_guid, original_uri) 
-             VALUES (:id, :social_network, :original_guid, :original_url)",
+                 VALUES (:id, :social_network, :original_guid, :original_url)",
                 &[
                     (":id", &syndicated_post.id),
                     (
@@ -87,11 +99,48 @@ impl SyndicatedPostStorage for SqliteSyndycatedPostStorage {
             .map(|_| ())
             .map_err(|err| StorageError::PersistenceError(format!("{:?}", err)))
     }
+
+    fn find(
+        &self,
+        original_guid: &String,
+        social_network: &Network,
+    ) -> Result<Option<SyndicatedPost>, StorageError> {
+        let mut statement = self.conn.prepare(
+            "SELECT id, social_network, original_guid, original_uri FROM post
+            WHERE original_guid = :original_guid AND social_network = :social_network",
+        )?;
+
+        statement
+            .query_map(
+                &[
+                    (":original_guid", original_guid.as_str()),
+                    (":social_network", &social_network.to_string().as_str()),
+                ],
+                |row| {
+                    Ok(SyndicatedPost {
+                        id: row.get(0).unwrap(),
+                        social_network: row.get(1).unwrap(),
+                        original_guid: row.get(2).unwrap(),
+                        original_uri: row.get(3).unwrap(),
+                    })
+                },
+            )
+            .map(|iter| {
+                // TODO: this needs some clean up
+                iter.map(|r| r.unwrap().clone())
+                    .collect::<Vec<_>>()
+                    .first()
+                    .map(|r| (*r).clone())
+            })
+            .map_err(|_| StorageError::PersistenceError(String::from("foo"))) // TODO: this needs some clean up
+    }
 }
 
 #[cfg(test)]
 pub mod stubs {
     use std::sync::Mutex;
+
+    use iwt_commons::social::Network;
 
     use super::{SyndicatedPost, SyndicatedPostStorage};
 
@@ -113,6 +162,19 @@ pub mod stubs {
             posts.push(syndicated_post);
 
             Ok(())
+        }
+
+        fn find(
+            &self,
+            original_guid: &String,
+            social_network: &Network,
+        ) -> Result<Option<SyndicatedPost>, super::StorageError> {
+            let posts = self.posts.lock().unwrap();
+
+            Ok(posts
+                .iter()
+                .find(|p| p.original_guid == *original_guid && p.social_network == *social_network)
+                .map(|p| (*p).clone()))
         }
     }
 }

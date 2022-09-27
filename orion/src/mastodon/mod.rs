@@ -56,4 +56,8 @@ impl Target for Mastodon {
             })
             .await
     }
+
+    fn network(&self) -> Network {
+        Network::Mastodon
+    }
 }

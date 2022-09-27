@@ -3,8 +3,8 @@ pub mod stubs {
 
     use oauth2::{AccessToken, RefreshToken};
 
-    use iwt_commons::social::Network;
     use iwt_commons::auth::token_db::TokenDB;
+    use iwt_commons::social::Network;
 
     pub struct StubTokenDB {
         access_token: Mutex<AccessToken>,
@@ -19,7 +19,7 @@ pub mod stubs {
             }
         }
     }
-    
+
     impl TokenDB for StubTokenDB {
         fn get_access_token(
             &self,

@@ -78,4 +78,8 @@ impl<DB: TokenDB> Target for Twitter<DB> {
             })
             .await
     }
+
+    fn network(&self) -> Network {
+        Network::Twitter
+    }
 }

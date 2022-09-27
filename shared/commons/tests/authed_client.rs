@@ -25,7 +25,10 @@ fn basic_client(base_url: &str) -> BasicClient {
 fn create_authed_client(base_url: &str) -> (Rc<impl TokenDB>, AuthedClient<impl TokenDB>) {
     let db = StubTokenDB::new();
     let shared_db = Rc::new(db);
-    (Rc::clone(&shared_db), AuthedClient::new(Network::Twitter, basic_client(base_url), shared_db))
+    (
+        Rc::clone(&shared_db),
+        AuthedClient::new(Network::Twitter, basic_client(base_url), shared_db),
+    )
 }
 
 #[tokio::test]
@@ -155,8 +158,7 @@ async fn test_token_is_refreshed_if_response_is_401() {
 
     assert!(form
         .iter()
-        .find(|(k, v)| k == "client_id"
-            && v == "some-client-id")
+        .find(|(k, v)| k == "client_id" && v == "some-client-id")
         .is_some());
 
     // The thirs request was to GET the /restricted url
@@ -173,15 +175,11 @@ async fn test_token_is_refreshed_if_response_is_401() {
     // The tokens are updated in the db
     assert_eq!(
         "new-access-token",
-        db.get_access_token(&Network::Twitter)
-            .unwrap()
-            .secret(),
+        db.get_access_token(&Network::Twitter).unwrap().secret(),
     );
 
     assert_eq!(
         "new-refresh-token",
-        db.get_refresh_token(&Network::Twitter)
-            .unwrap()
-            .secret(),
+        db.get_refresh_token(&Network::Twitter).unwrap().secret(),
     );
 }

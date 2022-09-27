@@ -33,13 +33,26 @@ async fn syndycate_channel<S: SyndicatedPostStorage>(
 ) -> Result<(), Box<dyn std::error::Error>> {
     run_and_collect(targets.iter(), |target| {
         run_and_collect(channel.items.iter(), |post| {
-            target.publish(post).map(|result| {
-                result.and_then(|syndicated| {
-                    storage
-                        .store(syndicated)
-                        .map_err(|err| Box::new(err) as Box<dyn std::error::Error>)
-                })
-            })
+            let stored = storage.find(&post.guid.as_ref().unwrap().value, &target.network());
+
+            async {
+                match stored {
+                    Ok(None) => {
+                        target
+                            .publish(post)
+                            .map(|result| {
+                                result.and_then(|syndicated| {
+                                    storage
+                                        .store(syndicated)
+                                        .map_err(|err| Box::new(err) as Box<dyn std::error::Error>)
+                                })
+                            })
+                            .await
+                    }
+                    Ok(Some(_)) => Ok(()),
+                    Err(e) => Err(Box::new(e) as Box<dyn std::error::Error>),
+                }
+            }
         })
     })
     .await
@@ -73,7 +86,7 @@ mod test {
     use crate::stubs::rss::{default_items, StubRssClient};
     use crate::stubs::syndycated_post::SyndicatedPostStorageStub;
     use crate::stubs::target::StubTarget;
-    use crate::syndicated_post::SyndicatedPost;
+    use crate::syndicated_post::{SyndicatedPost, SyndicatedPostStorage};
     use crate::target::stubs::FailingStubTarget;
     use crate::{config::RSSConfig, Config};
 
@@ -166,6 +179,38 @@ mod test {
         let calls = (*target_calls).lock().await;
 
         assert_eq!(*calls, default_items(feed));
+    }
+
+    #[tokio::test]
+    async fn test_syndycate_should_skip_published_posts() {
+        let feed = "http://example.com/rss.xml";
+        let config = config(vec![feed.to_string()]);
+
+        let client = StubRssClient::default();
+        let stub_target = StubTarget::new(Network::Mastodon);
+        let target_calls = Arc::clone(&stub_target.calls);
+        let targets = vec![stub_target.into()];
+
+        let items = default_items(feed);
+        let storage = SyndicatedPostStorageStub::default();
+
+        for item in items {
+            storage
+                .store(SyndicatedPost::new(
+                    Network::Mastodon,
+                    &String::from("id"),
+                    &item,
+                ))
+                .unwrap();
+        }
+
+        syndicate(&config, &client, &targets, &storage)
+            .await
+            .expect("Should be Ok()");
+
+        let calls = (*target_calls).lock().await;
+
+        assert_eq!(*calls, []);
     }
 
     #[tokio::test]

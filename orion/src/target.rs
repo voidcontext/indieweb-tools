@@ -1,4 +1,5 @@
 use async_trait::async_trait;
+use iwt_commons::social::Network;
 use rss::Item;
 
 use crate::syndicated_post::SyndicatedPost;
@@ -9,6 +10,8 @@ pub trait Target {
         &self,
         post: &Item,
     ) -> Result<SyndicatedPost, Box<dyn std::error::Error + 'a>>;
+
+    fn network(&self) -> Network;
 }
 
 #[cfg(test)]
@@ -52,6 +55,10 @@ pub mod stubs {
                 post,
             ))
         }
+
+        fn network(&self) -> Network {
+            self.social_network.clone()
+        }
     }
 
     impl From<StubTarget> for Box<dyn Target> {
@@ -80,6 +87,10 @@ pub mod stubs {
             _post: &Item,
         ) -> Result<SyndicatedPost, Box<dyn std::error::Error + 'a>> {
             Err(Box::new(TargetError))
+        }
+
+        fn network(&self) -> Network {
+            Network::Twitter
         }
     }
 
