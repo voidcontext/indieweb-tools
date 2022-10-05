@@ -5,7 +5,9 @@ My collection of indieweb tools
 ## Components
 
 - [app-auth](app-auth/): Oauth2 app authentication helper
+- [janitor](janitor/): [TODO] clean up tool (removing test posts from social networks, etc.)
 - [orion](orion/): Microblog syndication to Twitter and Mastodon
+- [wormhole](wormhole/): [TODO] Url shortener
 
 ## Basic usage
 

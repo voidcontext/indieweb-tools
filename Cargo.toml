@@ -3,6 +3,7 @@ members = [
   "app-auth",
   "janitor",
   "orion",
+  "wormhole",
   "shared/commons",
   "shared/social/mastodon",
   "shared/social/twitter",
