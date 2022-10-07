@@ -1,51 +1,119 @@
-use std::{net::{SocketAddr, IpAddr, Ipv4Addr}, env, rc::Rc, sync::Arc};
+use std::{
+    env,
+    net::{IpAddr, Ipv4Addr, SocketAddr},
+    sync::Arc,
+};
 
-use axum::{Router, Extension, routing::put, response::IntoResponse, extract::Path};
-use rand::{thread_rng, distributions::Alphanumeric, Rng};
+use axum::{
+    extract::Path,
+    http::StatusCode,
+    response::{IntoResponse, Redirect, Response},
+    routing::{get, put},
+    Extension, Router,
+};
+use rand::{distributions::Alphanumeric, thread_rng, Rng};
+use rusqlite::OptionalExtension;
 use tokio_rusqlite::Connection;
 
 #[derive(Clone)]
 struct State {
-    db_conn: Arc<Connection>
+    db_conn: Connection,
 }
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Hello, world!");
-    
+
     let db_path = env::var("WORMHOLE_DB_PATH").expect("WORMHOLE_DB_PATH must be set.");
     let db_conn = Connection::open(db_path).await.unwrap();
-    db_conn.call(|conn| conn.execute(
-        "
+    db_conn
+        .call(|conn| {
+            conn.execute(
+                "
         CREATE TABLE IF NOT EXISTS permashortlink (
             url   TEXT PRIMARY KEY,
             short VARCHAR(5)
         )
         ",
-        ()
-    )).await.unwrap();
-    
-    let state = State {db_conn: Arc::new(db_conn)};
-    
+                (),
+            )
+        })
+        .await
+        .unwrap();
+
+    let state = State { db_conn };
+
     let sock_addr = SocketAddr::new(IpAddr::V4(Ipv4Addr::LOCALHOST), 6009);
     let app = Router::new()
-        .route("/s/:url", put(add_url))
+        .route("/u/:url", put(add_url))
+        .route("/u/:url", get(get_short_url))
+        .route("/s/:short", get(redirect))
         // shate the state with the request handler
-        .layer(Extension(state));
+        .layer(Extension(Arc::new(state)));
 
     axum::Server::bind(&sock_addr)
         .serve(app.into_make_service())
         .await
-        .map_err(|e| Box::new(e) as Box::<dyn std::error::Error>)
+        .map_err(|e| Box::new(e) as Box<dyn std::error::Error>)
 }
 
-// TODO: get conn from state
-async fn add_url(Path(url): Path<String>) -> impl IntoResponse {
+async fn add_url(
+    Path(url): Path<String>,
+    Extension(state): Extension<Arc<State>>,
+) -> impl IntoResponse {
+    state
+        .db_conn
+        .call(move |conn| {
+            if let Some(short) = find_url(&url, conn).unwrap() {
+                (StatusCode::OK, short)
+            } else {
+                let short = gen_unique_short(conn);
+
+                persist(&url, &short, conn).unwrap();
+
+                (StatusCode::CREATED, short)
+            }
+        })
+        .await
+}
+
+async fn get_short_url(
+    Path(url): Path<String>,
+    Extension(state): Extension<Arc<State>>,
+) -> Result<String, StatusCode> {
+    state
+        .db_conn
+        .call(move |conn| {
+            if let Some(short) = find_url(&url, conn).unwrap() {
+                Ok(short)
+            } else {
+                Err(StatusCode::NOT_FOUND)
+            }
+        })
+        .await
+}
+
+async fn redirect(Path(short): Path<String>, Extension(state): Extension<Arc<State>>) -> Response {
+    state
+        .db_conn
+        .call(move |conn| {
+            if let Some(url) = find_url(&short, conn).unwrap() {
+                Redirect::permanent(url.as_str()).into_response()
+            } else {
+                StatusCode::NOT_FOUND.into_response()
+            }
+        })
+        .await
+}
+
+fn gen_unique_short(conn: &rusqlite::Connection) -> String {
     let mut short = gen_short();
-    
-    while Some(_) = find_short(short, conn) {
+
+    while let Some(_) = find_short(&short, conn).unwrap() {
         short = gen_short();
     }
+
+    short
 }
 
 fn gen_short() -> String {
@@ -56,14 +124,25 @@ fn gen_short() -> String {
         .collect()
 }
 
-fn find_short(short: &String, conn: rusqlite::Connection) -> rusqlite::Result<Option<String>> {
+fn find_short(short: &String, conn: &rusqlite::Connection) -> rusqlite::Result<Option<String>> {
     let mut statement = conn.prepare("SELECT short FROM permashortlink WHERE short = :short")?;
-    
-    statement.query_row(&[(":short", short.as_str())], |row| row.get(0))
+
+    statement
+        .query_row(&[(":short", short.as_str())], |row| row.get(0))
+        .optional()
 }
 
-fn find_url(url: &String, conn: rusqlite::Connection) -> rusqlite::Result<Option<String>> {
-    let mut statement = conn.prepare("SELECT short FROM permashortlink WHERE url = :url")?;
-    
-    statement.query_row(&[(":url", url.as_str())], |row| row.get(0))
+fn find_url(short: &String, conn: &rusqlite::Connection) -> rusqlite::Result<Option<String>> {
+    let mut statement = conn.prepare("SELECT url FROM permashortlink WHERE short = :short")?;
+
+    statement
+        .query_row(&[(":short", short.as_str())], |row| row.get(0))
+        .optional()
+}
+
+fn persist(url: &String, short: &String, conn: &rusqlite::Connection) -> rusqlite::Result<usize> {
+    conn.execute(
+        "INSERT INTO permashortlink (url, short) VALUES (?, ?)",
+        [url, short],
+    )
 }
