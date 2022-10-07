@@ -3,3 +3,5 @@ target
 
 indieweb.db
 indieweb.toml
+
+wormhole.db

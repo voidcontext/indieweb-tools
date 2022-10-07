@@ -33,7 +33,7 @@ access_token = "your_access_token..."
 2) Get Twitter auth tokens:
 
 ```bash
-$ nix run .#app-auth -- --config indieweb.toml --db-path orion.db auth twitter
+$ nix run .#app-auth -- --config indieweb.toml --db-path indieweb.db auth twitter
 ```
 
 3) Syndicate posts to Twitter and Mastodon
