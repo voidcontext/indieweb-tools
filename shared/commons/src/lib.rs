@@ -2,6 +2,11 @@ use std::{error::Error, fmt::Display};
 
 pub mod auth;
 pub mod social;
+pub mod text;
+
+mod permashort_link;
+
+pub use crate::permashort_link::*;
 
 #[derive(Debug)]
 struct SqlConversionError {
