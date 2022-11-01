@@ -28,7 +28,10 @@ impl RssClient for RssClientImpl {
                 let str = description.replace("<li>", "<li>- ");
                 println!("original desc: {}", str);
                 let fragment = Html::parse_document(&format!("<html>{}</html>", &str));
-                let cleaned = fragment.select(&Selector::parse("html").unwrap()).next().unwrap()
+                let cleaned = fragment
+                    .select(&Selector::parse("html").unwrap())
+                    .next()
+                    .unwrap()
                     .text()
                     .collect::<Vec<_>>()
                     .join("");
