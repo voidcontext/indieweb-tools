@@ -81,7 +81,7 @@ mod test {
 
     use oauth2::{AccessToken, ClientId};
 
-    use crate::config::{DBConfig, MastodonConfig, TwitterConfig};
+    use crate::config::{DBConfig, MastodonConfig, TwitterConfig, WormholeConfig};
     use crate::social::Network;
     use crate::stubs::rss::{default_items, StubRssClient};
     use crate::stubs::syndycated_post::SyndicatedPostStorageStub;
@@ -104,6 +104,10 @@ mod test {
             mastodon: MastodonConfig {
                 base_uri: String::from("https://example.com/mastodon"),
                 access_token: AccessToken::new(String::from("some-access-token")),
+            },
+            wormhole: WormholeConfig {
+                protocol: String::from("http"),
+                domain: String::from("localhost:9000"),
             },
         }
     }

@@ -9,6 +9,7 @@ pub struct Config {
     pub db: DBConfig,
     pub twitter: TwitterConfig,
     pub mastodon: MastodonConfig,
+    pub wormhole: WormholeConfig,
 }
 
 #[derive(Debug, Deserialize, PartialEq)]
@@ -30,6 +31,12 @@ pub struct TwitterConfig {
 pub struct MastodonConfig {
     pub base_uri: String,
     pub access_token: AccessToken,
+}
+
+#[derive(Debug, Deserialize, PartialEq)]
+pub struct WormholeConfig {
+    pub protocol: String,
+    pub domain: String,
 }
 
 impl PartialEq for MastodonConfig {
@@ -56,6 +63,7 @@ mod test {
     use super::MastodonConfig;
     use super::RSSConfig;
     use super::TwitterConfig;
+    use super::WormholeConfig;
 
     #[test]
     fn config_model_should_be_deserializable() {
@@ -72,6 +80,8 @@ mod test {
         [mastodon]
         base_uri = "https://mastodon.social"
         access_token = "some-access-token"
+        [wormhole]
+        base_uri = "http://localhost:9000"
         "#;
 
         assert_eq!(
@@ -92,6 +102,10 @@ mod test {
                 mastodon: MastodonConfig {
                     base_uri: String::from("https://mastodon.social"),
                     access_token: AccessToken::new(String::from("some-access-token"))
+                },
+                wormhole: WormholeConfig {
+                    protocol: String::from("http"),
+                    domain: String::from("localhost:9000"),
                 }
             })
         )

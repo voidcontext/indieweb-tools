@@ -8,6 +8,7 @@ use crate::{
 };
 use clap::Parser;
 pub use config::Config;
+use iwt_commons::wormhole::ReqwestWormholeClient;
 pub use iwt_commons::*;
 use log::LevelFilter::{Debug, Info};
 use rusqlite::Connection;
@@ -70,11 +71,21 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
             let token_db = Rc::new(SqliteTokenDB::new(Rc::clone(&conn)));
 
+            let wormhole_client = Rc::new(ReqwestWormholeClient::new(
+                &config.wormhole.protocol,
+                &config.wormhole.domain,
+            ));
+
             let targets: Vec<Box<dyn Target>> = vec![
-                Box::new(Twitter::new(config.twitter.client_id.clone(), token_db)),
+                Box::new(Twitter::new(
+                    config.twitter.client_id.clone(),
+                    token_db,
+                    Rc::clone(&wormhole_client),
+                )),
                 Box::new(Mastodon::new(
                     config.mastodon.base_uri.clone(),
                     config.mastodon.access_token.clone(),
+                    Rc::clone(&wormhole_client),
                 )),
             ];
 

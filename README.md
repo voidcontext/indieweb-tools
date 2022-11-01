@@ -28,6 +28,10 @@ client_id = "your_client_id..."
 [mastodon]
 base_uri = "http://your-mastodon-instance.example.com"
 access_token = "your_access_token..."
+
+[wormhole]
+protocol = "https"
+domain = "short.domain"
 ```
 
 2) Get Twitter auth tokens:

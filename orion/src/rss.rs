@@ -1,5 +1,6 @@
 use async_trait::async_trait;
 use rss::Channel;
+use scraper::{Html, Selector};
 
 pub struct RssClientImpl;
 
@@ -24,12 +25,15 @@ impl RssClient for RssClientImpl {
 
         for item in channel.items_mut() {
             if let Some(description) = item.description.clone() {
-                let str = description.clone();
-                let decoded = htmlentity::entity::decode(&str.as_str())
-                    .iter()
-                    .collect::<String>();
-                println!("{}", decoded);
-                item.set_description(decoded);
+                let str = description.replace("<li>", "<li>- ");
+                println!("original desc: {}", str);
+                let fragment = Html::parse_document(&format!("<html>{}</html>", &str));
+                let cleaned = fragment.select(&Selector::parse("html").unwrap()).next().unwrap()
+                    .text()
+                    .collect::<Vec<_>>()
+                    .join("");
+                println!("cleaned desc: {}", cleaned);
+                item.set_description(cleaned);
             }
         }
 

@@ -2,6 +2,7 @@ use std::rc::Rc;
 
 use async_trait::async_trait;
 use futures::TryFutureExt;
+use iwt_commons::text;
 use oauth2::{basic::BasicClient, AuthUrl, ClientId, TokenUrl};
 use reqwest::Client;
 use rss::Item;
@@ -10,14 +11,16 @@ use crate::auth::token_db::TokenDB;
 use crate::social::Network;
 use crate::syndicated_post::SyndicatedPost;
 use crate::{auth::oauth::AuthedClient, target::Target};
+use iwt_commons::wormhole::WormholeClient;
 
-pub struct Twitter<DB: TokenDB> {
+pub struct Twitter<DB: TokenDB, WHClient: WormholeClient> {
     authed_client: AuthedClient<DB>,
     http_client: Client,
+    wormhole_client: Rc<WHClient>,
 }
 
-impl<DB: TokenDB> Twitter<DB> {
-    pub fn new(client_id: ClientId, db: Rc<DB>) -> Self {
+impl<DB: TokenDB, WHClient: WormholeClient> Twitter<DB, WHClient> {
+    pub fn new(client_id: ClientId, db: Rc<DB>, wormhole_client: Rc<WHClient>) -> Self {
         Self {
             authed_client: AuthedClient::new(
                 Network::Twitter,
@@ -34,6 +37,7 @@ impl<DB: TokenDB> Twitter<DB> {
                 db,
             ),
             http_client: Client::new(),
+            wormhole_client,
         }
     }
 }
@@ -54,18 +58,30 @@ struct TweetResponseData {
 }
 
 #[async_trait(?Send)]
-impl<DB: TokenDB> Target for Twitter<DB> {
+impl<DB: TokenDB, WHClient: WormholeClient> Target for Twitter<DB, WHClient> {
     async fn publish<'a>(
         &self,
         post: &Item,
     ) -> Result<SyndicatedPost, Box<dyn std::error::Error + 'a>> {
         log::debug!("processing post: {:?}", post);
+
+        let permashort_citation = self
+            .wormhole_client
+            .put_uri(post.link.as_ref().unwrap())
+            .await?;
+
+        let mut text =
+            text::shorten(post.description().unwrap(), 250 - 24 /* Link + space*/).to_owned();
+
+        if text != post.description().unwrap() {
+            text.push(' ');
+            text.push_str(permashort_citation.to_uri().as_str())
+        }
+
         let request = self
             .http_client
             .post("https://api.twitter.com/2/tweets")
-            .json(&TweetsRequest {
-                text: post.description().unwrap().to_owned(),
-            });
+            .json(&TweetsRequest { text });
 
         self.authed_client
             .authed_request(request.build().unwrap())

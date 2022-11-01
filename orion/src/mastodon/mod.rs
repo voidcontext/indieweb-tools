@@ -1,22 +1,27 @@
+use std::rc::Rc;
+
 use crate::{social::Network, syndicated_post::SyndicatedPost, target::Target};
 use async_trait::async_trait;
 use futures::TryFutureExt;
+use iwt_commons::{text, wormhole::WormholeClient};
 use oauth2::AccessToken;
 use reqwest::Client;
 use rss::Item;
 
-pub struct Mastodon {
+pub struct Mastodon<WHClient: WormholeClient> {
     base_uri: String,
     access_token: AccessToken,
     http_client: Client,
+    wormhole_client: Rc<WHClient>,
 }
 
-impl Mastodon {
-    pub fn new(base_uri: String, access_token: AccessToken) -> Self {
+impl<WHClient: WormholeClient> Mastodon<WHClient> {
+    pub fn new(base_uri: String, access_token: AccessToken, wormhole_client: Rc<WHClient>) -> Self {
         Self {
             base_uri,
             access_token,
             http_client: Client::new(),
+            wormhole_client,
         }
     }
 }
@@ -32,19 +37,31 @@ struct MastodonResponse {
 }
 
 #[async_trait(?Send)]
-impl Target for Mastodon {
+impl<WHClient: WormholeClient> Target for Mastodon<WHClient> {
     async fn publish<'a>(
         &self,
         post: &Item,
     ) -> Result<SyndicatedPost, Box<dyn std::error::Error + 'a>> {
         log::debug!("processing post: {:?}", post);
+
+        let permashort_citation = self
+            .wormhole_client
+            .put_uri(post.link.as_ref().unwrap())
+            .await?;
+
+        let mut status =
+            text::shorten(post.description().unwrap(), 250 - 24 /* Link + space*/).to_owned();
+
+        if status != post.description().unwrap() {
+            status.push(' ');
+            status.push_str(permashort_citation.to_uri().as_str())
+        }
+
         self.http_client
             // TODO: make mastodon instance configurable
             .post(format!("{}/api/v1/statuses", self.base_uri))
             .bearer_auth(self.access_token.secret().clone())
-            .json(&UpdateStatusRequest {
-                status: post.description().unwrap().to_owned(),
-            })
+            .json(&UpdateStatusRequest { status })
             .send()
             .map_err(|err| Box::new(err) as Box<dyn std::error::Error>)
             .and_then(|response| async {
