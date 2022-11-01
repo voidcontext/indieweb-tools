@@ -81,7 +81,8 @@ mod test {
         base_uri = "https://mastodon.social"
         access_token = "some-access-token"
         [wormhole]
-        base_uri = "http://localhost:9000"
+        protocol = "http"
+        domain = "localhost:9000"
         "#;
 
         assert_eq!(
