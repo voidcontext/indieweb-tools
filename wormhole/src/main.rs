@@ -22,9 +22,11 @@ struct State {
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    println!("Hello, world!");
-
     let db_path = env::var("WORMHOLE_DB_PATH").expect("WORMHOLE_DB_PATH must be set.");
+    let http_port = env::var("WORMHOLE_HTTP_PORT")
+        .expect("WORMHOLE_HTTP_PORT must be set.")
+        .parse()
+        .expect("WORMHOLE_HTTP_PORT cannot be parsed as u16");
     let db_conn = Connection::open(db_path).await.unwrap();
     db_conn
         .call(|conn| {
@@ -43,7 +45,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let state = State { db_conn };
 
-    let sock_addr = SocketAddr::new(IpAddr::V4(Ipv4Addr::LOCALHOST), 6009);
+    let sock_addr = SocketAddr::new(IpAddr::V4(Ipv4Addr::LOCALHOST), http_port);
     let app = Router::new()
         .route("/u/:url", put(add_url))
         .route("/u/:url", get(get_short_url))
