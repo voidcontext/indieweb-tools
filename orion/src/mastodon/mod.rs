@@ -49,13 +49,11 @@ impl<WHClient: WormholeClient> Target for Mastodon<WHClient> {
             .put_uri(post.link.as_ref().unwrap())
             .await?;
 
-        let mut status =
-            text::shorten(post.description().unwrap(), 250 - 24 /* Link + space*/).to_owned();
-
-        if status != post.description().unwrap() {
-            status.push(' ');
-            status.push_str(permashort_citation.to_uri().as_str())
-        }
+        let status = text::shorten_with_permashort_citation(
+            post.description().unwrap(),
+            500,
+            &permashort_citation,
+        );
 
         self.http_client
             // TODO: make mastodon instance configurable

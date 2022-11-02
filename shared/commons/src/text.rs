@@ -1,4 +1,6 @@
-pub fn shorten(text: &str, limit: u16) -> &str {
+use crate::PermashortCitation;
+
+pub fn shorten(text: &str, limit: usize) -> &str {
     let words = words(text);
     let mut len = 0;
     let mut i = 0;
@@ -8,6 +10,28 @@ pub fn shorten(text: &str, limit: u16) -> &str {
         i += 1;
     }
     &text[0..len]
+}
+
+pub fn shorten_with_permashort_citation<'a>(
+    text: &str,
+    limit: usize,
+    permashort_citation: &PermashortCitation,
+) -> String {
+    let pc = format!(" [{}]", permashort_citation.to_string());
+    let shortened = shorten(text, limit - pc.len());
+
+    if shortened == text {
+        let mut appended = text.to_owned();
+        appended.push_str(&pc);
+        appended
+    } else {
+        let shortened = shorten(
+            text,
+            limit - 23 - 4, /* Link + space + ellipsis + quuotes*/
+        );
+
+        format!("\"{}\"… {}", shortened, permashort_citation.to_uri())
+    }
 }
 
 fn words(input: &str) -> Vec<&str> {

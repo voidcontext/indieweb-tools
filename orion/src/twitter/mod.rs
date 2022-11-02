@@ -70,13 +70,11 @@ impl<DB: TokenDB, WHClient: WormholeClient> Target for Twitter<DB, WHClient> {
             .put_uri(post.link.as_ref().unwrap())
             .await?;
 
-        let mut text =
-            text::shorten(post.description().unwrap(), 250 - 24 /* Link + space*/).to_owned();
-
-        if text != post.description().unwrap() {
-            text.push(' ');
-            text.push_str(permashort_citation.to_uri().as_str())
-        }
+        let text = text::shorten_with_permashort_citation(
+            post.description().unwrap(),
+            280,
+            &permashort_citation,
+        );
 
         let request = self
             .http_client
