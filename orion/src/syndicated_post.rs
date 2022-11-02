@@ -14,7 +14,7 @@ pub struct SyndicatedPost {
 }
 
 impl SyndicatedPost {
-    pub fn new(social_network: Network, id: &String, item: &Item) -> Self {
+    pub fn new(social_network: Network, id: &str, item: &Item) -> Self {
         Self {
             social_network,
             id: String::from(id),
@@ -48,7 +48,7 @@ pub trait SyndicatedPostStorage {
     fn store(&self, syndicated_post: SyndicatedPost) -> Result<(), StorageError>;
     fn find(
         &self,
-        original_guid: &String,
+        original_guid: &str,
         social_network: &Network,
     ) -> Result<Option<SyndicatedPost>, StorageError>;
 }
@@ -102,7 +102,7 @@ impl SyndicatedPostStorage for SqliteSyndycatedPostStorage {
 
     fn find(
         &self,
-        original_guid: &String,
+        original_guid: &str,
         social_network: &Network,
     ) -> Result<Option<SyndicatedPost>, StorageError> {
         let mut statement = self.conn.prepare(
@@ -113,8 +113,8 @@ impl SyndicatedPostStorage for SqliteSyndycatedPostStorage {
         statement
             .query_map(
                 &[
-                    (":original_guid", original_guid.as_str()),
-                    (":social_network", &social_network.to_string().as_str()),
+                    (":original_guid", original_guid),
+                    (":social_network", social_network.to_string().as_str()),
                 ],
                 |row| {
                     Ok(SyndicatedPost {
@@ -127,7 +127,7 @@ impl SyndicatedPostStorage for SqliteSyndycatedPostStorage {
             )
             .map(|iter| {
                 // TODO: this needs some clean up
-                iter.map(|r| r.unwrap().clone())
+                iter.map(|r| r.unwrap())
                     .collect::<Vec<_>>()
                     .first()
                     .map(|r| (*r).clone())
@@ -166,7 +166,7 @@ pub mod stubs {
 
         fn find(
             &self,
-            original_guid: &String,
+            original_guid: &str,
             social_network: &Network,
         ) -> Result<Option<SyndicatedPost>, super::StorageError> {
             let posts = self.posts.lock().unwrap();

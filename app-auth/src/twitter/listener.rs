@@ -28,8 +28,8 @@ struct State {
 
 pub async fn start(
     config: &Config,
-    challenge: &String,
-    csrf_state: &String,
+    challenge: &str,
+    csrf_state: &str,
     db_path: Option<String>,
 ) -> Result<(), Error> {
     // Create a channel to be able to shut down the webserver from the
@@ -38,8 +38,8 @@ pub async fn start(
 
     // Initialise the shared state
     let state = Arc::new(State {
-        challenge: challenge.clone(),
-        oauth_state: csrf_state.clone(),
+        challenge: challenge.to_string(),
+        oauth_state: csrf_state.to_string(),
         client_id: config.twitter.client_id.clone(),
         shutdown_signal: tx,
         db_path,
@@ -57,9 +57,7 @@ pub async fn start(
         // previously created channel
         .with_graceful_shutdown(async { rx.recv().await.unwrap() })
         .await
-        .map_err(|error| match error {
-            _ => Error::ListenerError(),
-        })
+        .map_err(|_| Error::ListenerError())
 }
 
 #[derive(Deserialize)]

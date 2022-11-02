@@ -111,7 +111,7 @@ async fn redirect(Path(short): Path<String>, Extension(state): Extension<Arc<Sta
 fn gen_unique_short(conn: &rusqlite::Connection) -> String {
     let mut short = gen_short();
 
-    while let Some(_) = find_url(&short, conn).unwrap() {
+    while find_url(&short, conn).unwrap().is_some() {
         short = gen_short();
     }
 
@@ -126,19 +126,19 @@ fn gen_short() -> String {
         .collect()
 }
 
-fn find_short(url: &String, conn: &rusqlite::Connection) -> rusqlite::Result<Option<String>> {
+fn find_short(url: &str, conn: &rusqlite::Connection) -> rusqlite::Result<Option<String>> {
     let mut statement = conn.prepare("SELECT short FROM permashortlink WHERE url = :url")?;
 
     statement
-        .query_row(&[(":url", url.as_str())], |row| row.get(0))
+        .query_row(&[(":url", url)], |row| row.get(0))
         .optional()
 }
 
-fn find_url(short: &String, conn: &rusqlite::Connection) -> rusqlite::Result<Option<String>> {
+fn find_url(short: &str, conn: &rusqlite::Connection) -> rusqlite::Result<Option<String>> {
     let mut statement = conn.prepare("SELECT url FROM permashortlink WHERE short = :short")?;
 
     statement
-        .query_row(&[(":short", short.as_str())], |row| row.get(0))
+        .query_row(&[(":short", short)], |row| row.get(0))
         .optional()
 }
 

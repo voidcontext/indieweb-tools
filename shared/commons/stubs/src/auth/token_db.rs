@@ -20,6 +20,12 @@ pub mod stubs {
         }
     }
 
+    impl Default for StubTokenDB {
+        fn default() -> Self {
+            Self::new()
+        }
+    }
+
     impl TokenDB for StubTokenDB {
         fn get_access_token(
             &self,

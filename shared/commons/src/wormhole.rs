@@ -1,7 +1,7 @@
 use std::fmt::Display;
 
 use async_trait::async_trait;
-use reqwest::{Client, StatusCode};
+use reqwest::Client;
 
 use crate::PermashortCitation;
 
