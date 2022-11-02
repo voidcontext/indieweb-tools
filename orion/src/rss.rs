@@ -26,7 +26,7 @@ impl RssClient for RssClientImpl {
         for item in channel.items_mut() {
             if let Some(description) = item.description.clone() {
                 let str = description.replace("<li>", "<li>- ");
-                println!("original desc: {}", str);
+                log::debug!("original desc: {}", str);
                 let fragment = Html::parse_document(&format!("<html>{}</html>", &str));
                 let cleaned = fragment
                     .select(&Selector::parse("html").unwrap())
@@ -35,7 +35,7 @@ impl RssClient for RssClientImpl {
                     .text()
                     .collect::<Vec<_>>()
                     .join("");
-                println!("cleaned desc: {}", cleaned);
+                log::debug!("cleaned desc: {}", cleaned);
                 item.set_description(cleaned);
             }
         }

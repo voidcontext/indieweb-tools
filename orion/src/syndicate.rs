@@ -33,11 +33,20 @@ async fn syndycate_channel<S: SyndicatedPostStorage>(
 ) -> Result<(), Box<dyn std::error::Error>> {
     run_and_collect(targets.iter(), |target| {
         run_and_collect(channel.items.iter(), |post| {
+            log::info!(
+                "Syndicating post found at {} to {}",
+                post.link().unwrap(),
+                target.network().to_string()
+            );
             let stored = storage.find(&post.guid.as_ref().unwrap().value, &target.network());
 
             async {
                 match stored {
                     Ok(None) => {
+                        log::info!(
+                            " -> Post not found in DB, syndycating to {}",
+                            target.network().to_string()
+                        );
                         target
                             .publish(post)
                             .map(|result| {
@@ -49,7 +58,13 @@ async fn syndycate_channel<S: SyndicatedPostStorage>(
                             })
                             .await
                     }
-                    Ok(Some(_)) => Ok(()),
+                    Ok(Some(_)) => {
+                        log::info!(
+                            " -> Post has been already syndicated to {}",
+                            target.network().to_string()
+                        );
+                        Ok(())
+                    }
                     Err(e) => Err(Box::new(e) as Box<dyn std::error::Error>),
                 }
             }
