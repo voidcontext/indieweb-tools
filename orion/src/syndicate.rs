@@ -107,7 +107,8 @@ mod test {
             },
             wormhole: WormholeConfig {
                 protocol: String::from("http"),
-                domain: String::from("localhost:9000"),
+                domain: String::from("shortly"),
+                put_base_uri: Some(String::from("http://localhost:9000")),
             },
         }
     }

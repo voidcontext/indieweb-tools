@@ -37,6 +37,7 @@ pub struct MastodonConfig {
 pub struct WormholeConfig {
     pub protocol: String,
     pub domain: String,
+    pub put_base_uri: Option<String>,
 }
 
 impl PartialEq for MastodonConfig {
@@ -107,6 +108,7 @@ mod test {
                 wormhole: WormholeConfig {
                     protocol: String::from("http"),
                     domain: String::from("localhost:9000"),
+                    put_base_uri: None,
                 }
             })
         )

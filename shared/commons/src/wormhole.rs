@@ -35,14 +35,18 @@ pub trait WormholeClient {
 pub struct ReqwestWormholeClient {
     protocol: String,
     domain: String,
+    base_uri: String,
     client: Client,
 }
 
 impl ReqwestWormholeClient {
-    pub fn new(protocol: &str, domain: &str) -> Self {
+    pub fn new(protocol: &str, domain: &str, put_base_uri: Option<&String>) -> Self {
         Self {
             protocol: protocol.to_owned(),
             domain: domain.to_owned(),
+            base_uri: put_base_uri
+                .unwrap_or(&format!("{}://{}", protocol, domain))
+                .clone(),
             client: Client::new(),
         }
     }
@@ -53,12 +57,7 @@ impl WormholeClient for ReqwestWormholeClient {
     async fn put_uri(&self, uri: &str) -> Result<PermashortCitation, WormholeClientError> {
         let response = self
             .client
-            .put(format!(
-                "{}://{}/u/{}",
-                self.protocol,
-                self.domain,
-                urlencoding::encode(uri)
-            ))
+            .put(format!("{}/u/{}", self.base_uri, urlencoding::encode(uri)))
             .send()
             .await?;
 

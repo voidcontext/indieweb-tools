@@ -74,6 +74,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             let wormhole_client = Rc::new(ReqwestWormholeClient::new(
                 &config.wormhole.protocol,
                 &config.wormhole.domain,
+                config.wormhole.put_base_uri.as_ref(),
             ));
 
             let targets: Vec<Box<dyn Target>> = vec![
