@@ -17,7 +17,7 @@ pub fn shorten_with_permashort_citation<'a>(
     limit: usize,
     permashort_citation: &PermashortCitation,
 ) -> String {
-    let pc = format!(" [{}]", permashort_citation.to_string());
+    let pc = format!(" ({})]", permashort_citation.to_string());
     let shortened = shorten(text, limit - pc.len());
 
     if shortened == text {
