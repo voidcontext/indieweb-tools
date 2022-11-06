@@ -47,16 +47,17 @@ impl<DB: TokenDB> AuthedClient<DB> {
 
     pub async fn authed_request(
         &self,
-        request: Request,
+        mut request: Request,
     ) -> Result<Response, Box<dyn std::error::Error>> {
-        let mut request_cloned = request.try_clone().unwrap();
         {
             let tokens = self.tokens.lock().await;
-            request_cloned = self.authorize_request(request_cloned, &tokens).await;
+            self.authorize_request(&mut request, &tokens);
         }
 
-        log::debug!("headers: {:?}", request_cloned.headers());
-        let response = self.http_client.execute(request_cloned).await?;
+        let mut cloned_request = request.try_clone().expect("Request cannot be cloned");
+
+        log::debug!("headers: {:?}", request.headers());
+        let response = self.http_client.execute(request).await?;
         log::debug!("response from execue: {:?}", response);
 
         if response.status() == StatusCode::UNAUTHORIZED {
@@ -65,14 +66,13 @@ impl<DB: TokenDB> AuthedClient<DB> {
             log::debug!("token credentials lock acquired");
             *tokens = self.exchange_refresh_token(&tokens).await?;
 
-            let request_cloned = request.try_clone().unwrap();
-            let request_cloned = self.authorize_request(request_cloned, &tokens).await;
+            self.authorize_request(&mut cloned_request, &tokens);
             log::debug!(
                 "headers after token refresh: {:?}",
-                request_cloned.headers()
+                cloned_request.headers()
             );
             self.http_client
-                .execute(request_cloned)
+                .execute(cloned_request)
                 .await
                 .map(|res| {
                     log::debug!("response: {:?}", res);
@@ -84,13 +84,12 @@ impl<DB: TokenDB> AuthedClient<DB> {
         }
     }
 
-    async fn authorize_request(&self, mut request: Request, tokens: &TokenCredentials) -> Request {
+    fn authorize_request(&self, request: &mut Request, tokens: &TokenCredentials) {
+        request.headers_mut().remove(AUTHORIZATION);
         request.headers_mut().append(
             AUTHORIZATION,
             HeaderValue::from_str(&format!("Bearer {}", tokens.access_token.secret())).unwrap(),
         );
-
-        request
     }
 
     async fn exchange_refresh_token(
