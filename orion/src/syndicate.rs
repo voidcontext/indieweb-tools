@@ -1,9 +1,10 @@
+use crate::rss;
+use ::rss::Channel;
 use futures::{Future, FutureExt, StreamExt, TryFutureExt};
-use rss::Channel;
 
-use crate::syndicated_post::SyndicatedPostStorage;
+use crate::syndicated_post;
 use crate::target::Target;
-use crate::{Config, RssClient};
+use crate::Config;
 
 /// Orchestrates syndication
 pub async fn syndicate<R, S>(
@@ -13,8 +14,8 @@ pub async fn syndicate<R, S>(
     storage: &S,
 ) -> Result<(), Box<dyn std::error::Error>>
 where
-    R: RssClient,
-    S: SyndicatedPostStorage,
+    R: rss::Client,
+    S: syndicated_post::Storage,
 {
     log::debug!("Received config: {:?}", config);
     run_and_collect(config.rss.urls.iter(), |url| {
@@ -26,7 +27,7 @@ where
 }
 
 /// Syndicates a single channel
-async fn syndycate_channel<S: SyndicatedPostStorage>(
+async fn syndycate_channel<S: syndicated_post::Storage>(
     channel: Channel,
     targets: &[Box<dyn Target>],
     storage: &S,
@@ -101,7 +102,7 @@ mod test {
     use crate::stubs::rss::{default_items, StubRssClient};
     use crate::stubs::syndycated_post::SyndicatedPostStorageStub;
     use crate::stubs::target::StubTarget;
-    use crate::syndicated_post::{SyndicatedPost, SyndicatedPostStorage};
+    use crate::syndicated_post::{Storage, SyndicatedPost};
     use crate::target::stubs::FailingStubTarget;
     use crate::{config::RSSConfig, Config};
 

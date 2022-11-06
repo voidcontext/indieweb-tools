@@ -1,6 +1,5 @@
 use std::{fmt::Display, rc::Rc};
 
-pub use crate::rss::*;
 pub use crate::target::Target;
 use crate::{
     auth::token_db::SqliteTokenDB, mastodon::Mastodon,
@@ -95,7 +94,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 .init_table()
                 .expect("Couldn't initialise post storage");
 
-            syndicate::syndicate(&config, &RssClientImpl, &targets, &storage).await
+            syndicate::syndicate(&config, &rss::ReqwestClient, &targets, &storage).await
         }
     };
 

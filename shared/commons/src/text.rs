@@ -12,7 +12,7 @@ pub fn shorten(text: &str, limit: usize) -> &str {
     &text[0..len]
 }
 
-pub fn shorten_with_permashort_citation<'a>(
+pub fn shorten_with_permashort_citation(
     text: &str,
     limit: usize,
     permashort_citation: &PermashortCitation,

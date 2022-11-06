@@ -2,17 +2,17 @@ use async_trait::async_trait;
 use rss::Channel;
 use scraper::{Html, Selector};
 
-pub struct RssClientImpl;
+pub struct ReqwestClient;
 
 #[async_trait]
-pub trait RssClient {
+pub trait Client {
     /// Loads RSS feed from the given URL a parse it into a Channel
     async fn get_channel(&self, url: &str)
         -> Result<Channel, Box<dyn std::error::Error + 'static>>;
 }
 
 #[async_trait]
-impl RssClient for RssClientImpl {
+impl Client for ReqwestClient {
     async fn get_channel(
         &self,
         url: &str,
@@ -58,7 +58,7 @@ pub mod stubs {
     use reqwest::Url;
     use rss::{Channel, GuidBuilder, Item};
 
-    use super::RssClient;
+    use super::Client;
 
     #[derive(Default)]
     pub struct StubRssClient {
@@ -81,7 +81,7 @@ pub mod stubs {
     }
 
     #[async_trait]
-    impl RssClient for StubRssClient {
+    impl Client for StubRssClient {
         async fn get_channel(
             &self,
             url: &str,

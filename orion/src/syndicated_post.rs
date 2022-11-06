@@ -44,7 +44,7 @@ impl From<rusqlite::Error> for StorageError {
 
 impl std::error::Error for StorageError {}
 
-pub trait SyndicatedPostStorage {
+pub trait Storage {
     fn store(&self, syndicated_post: SyndicatedPost) -> Result<(), StorageError>;
     fn find(
         &self,
@@ -80,7 +80,7 @@ impl SqliteSyndycatedPostStorage {
     }
 }
 
-impl SyndicatedPostStorage for SqliteSyndycatedPostStorage {
+impl Storage for SqliteSyndycatedPostStorage {
     fn store(&self, syndicated_post: SyndicatedPost) -> Result<(), StorageError> {
         self.conn
             .execute(
@@ -127,7 +127,7 @@ impl SyndicatedPostStorage for SqliteSyndycatedPostStorage {
             )
             .map(|iter| {
                 // TODO: this needs some clean up
-                iter.map(|r| r.unwrap())
+                iter.map(Result::unwrap)
                     .collect::<Vec<_>>()
                     .first()
                     .map(|r| (*r).clone())
@@ -142,7 +142,7 @@ pub mod stubs {
 
     use iwt_commons::social::Network;
 
-    use super::{SyndicatedPost, SyndicatedPostStorage};
+    use super::{Storage, SyndicatedPost};
 
     pub struct SyndicatedPostStorageStub {
         pub posts: Mutex<Vec<SyndicatedPost>>,
@@ -156,7 +156,7 @@ pub mod stubs {
         }
     }
 
-    impl SyndicatedPostStorage for SyndicatedPostStorageStub {
+    impl Storage for SyndicatedPostStorageStub {
         fn store(&self, syndicated_post: SyndicatedPost) -> Result<(), super::StorageError> {
             let mut posts = self.posts.lock().unwrap();
             posts.push(syndicated_post);
