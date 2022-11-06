@@ -11,15 +11,15 @@ use crate::auth::token_db::TokenDB;
 use crate::social::Network;
 use crate::syndicated_post::SyndicatedPost;
 use crate::{auth::oauth::AuthedClient, target::Target};
-use iwt_commons::wormhole::WormholeClient;
+use iwt_commons::wormhole;
 
-pub struct Twitter<DB: TokenDB, WHClient: WormholeClient> {
+pub struct Twitter<DB: TokenDB, WHClient: wormhole::Client> {
     authed_client: AuthedClient<DB>,
     http_client: Client,
     wormhole_client: Rc<WHClient>,
 }
 
-impl<DB: TokenDB, WHClient: WormholeClient> Twitter<DB, WHClient> {
+impl<DB: TokenDB, WHClient: wormhole::Client> Twitter<DB, WHClient> {
     pub fn new(client_id: ClientId, db: Rc<DB>, wormhole_client: Rc<WHClient>) -> Self {
         Self {
             authed_client: AuthedClient::new(
@@ -58,7 +58,7 @@ struct TweetResponseData {
 }
 
 #[async_trait(?Send)]
-impl<DB: TokenDB, WHClient: WormholeClient> Target for Twitter<DB, WHClient> {
+impl<DB: TokenDB, WHClient: wormhole::Client> Target for Twitter<DB, WHClient> {
     async fn publish<'a>(
         &self,
         post: &Item,

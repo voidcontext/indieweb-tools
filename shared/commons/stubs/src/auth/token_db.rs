@@ -12,6 +12,7 @@ pub mod stubs {
     }
 
     impl StubTokenDB {
+        #[must_use]
         pub fn new() -> Self {
             StubTokenDB {
                 access_token: Mutex::new(AccessToken::new(String::from("initial-access-token"))),

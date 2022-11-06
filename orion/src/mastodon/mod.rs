@@ -3,19 +3,19 @@ use std::rc::Rc;
 use crate::{social::Network, syndicated_post::SyndicatedPost, target::Target};
 use async_trait::async_trait;
 use futures::TryFutureExt;
-use iwt_commons::{text, wormhole::WormholeClient};
+use iwt_commons::{text, wormhole};
 use oauth2::AccessToken;
 use reqwest::Client;
 use rss::Item;
 
-pub struct Mastodon<WHClient: WormholeClient> {
+pub struct Mastodon<WHClient: wormhole::Client> {
     base_uri: String,
     access_token: AccessToken,
     http_client: Client,
     wormhole_client: Rc<WHClient>,
 }
 
-impl<WHClient: WormholeClient> Mastodon<WHClient> {
+impl<WHClient: wormhole::Client> Mastodon<WHClient> {
     pub fn new(base_uri: String, access_token: AccessToken, wormhole_client: Rc<WHClient>) -> Self {
         Self {
             base_uri,
@@ -37,7 +37,7 @@ struct MastodonResponse {
 }
 
 #[async_trait(?Send)]
-impl<WHClient: WormholeClient> Target for Mastodon<WHClient> {
+impl<WHClient: wormhole::Client> Target for Mastodon<WHClient> {
     async fn publish<'a>(
         &self,
         post: &Item,

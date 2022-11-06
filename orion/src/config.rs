@@ -5,42 +5,42 @@ use serde_derive::Deserialize;
 
 #[derive(Debug, Deserialize, PartialEq)]
 pub struct Config {
-    pub rss: RSSConfig,
-    pub db: DBConfig,
-    pub twitter: TwitterConfig,
-    pub mastodon: MastodonConfig,
-    pub wormhole: WormholeConfig,
+    pub rss: Rss,
+    pub db: DB,
+    pub twitter: Twitter,
+    pub mastodon: Mastodon,
+    pub wormhole: Wormhole,
 }
 
 #[derive(Debug, Deserialize, PartialEq)]
-pub struct RSSConfig {
+pub struct Rss {
     pub urls: Vec<String>,
 }
 
 #[derive(Debug, Deserialize, PartialEq)]
-pub struct DBConfig {
+pub struct DB {
     pub path: String,
 }
 
 #[derive(Debug, Deserialize, PartialEq)]
-pub struct TwitterConfig {
+pub struct Twitter {
     pub client_id: ClientId,
 }
 
 #[derive(Debug, Deserialize)]
-pub struct MastodonConfig {
+pub struct Mastodon {
     pub base_uri: String,
     pub access_token: AccessToken,
 }
 
 #[derive(Debug, Deserialize, PartialEq)]
-pub struct WormholeConfig {
+pub struct Wormhole {
     pub protocol: String,
     pub domain: String,
     pub put_base_uri: Option<String>,
 }
 
-impl PartialEq for MastodonConfig {
+impl PartialEq for Mastodon {
     fn eq(&self, other: &Self) -> bool {
         self.base_uri == other.base_uri && self.access_token.secret() == other.access_token.secret()
     }
@@ -60,11 +60,11 @@ mod test {
     use oauth2::ClientId;
 
     use super::Config;
-    use super::DBConfig;
-    use super::MastodonConfig;
-    use super::RSSConfig;
-    use super::TwitterConfig;
-    use super::WormholeConfig;
+    use super::Mastodon;
+    use super::Rss;
+    use super::Twitter;
+    use super::Wormhole;
+    use super::DB;
 
     #[test]
     fn config_model_should_be_deserializable() {
@@ -89,23 +89,23 @@ mod test {
         assert_eq!(
             toml::from_str::<Config>(config),
             Ok(Config {
-                rss: RSSConfig {
+                rss: Rss {
                     urls: vec![
                         "http://exmample.com/rss.xml".to_string(),
                         "http://exmample.com/some-site/rss.xml".to_string()
                     ]
                 },
-                db: DBConfig {
+                db: DB {
                     path: String::from("some/path")
                 },
-                twitter: TwitterConfig {
+                twitter: Twitter {
                     client_id: ClientId::new(String::from("some_client_id"))
                 },
-                mastodon: MastodonConfig {
+                mastodon: Mastodon {
                     base_uri: String::from("https://mastodon.social"),
                     access_token: AccessToken::new(String::from("some-access-token"))
                 },
-                wormhole: WormholeConfig {
+                wormhole: Wormhole {
                     protocol: String::from("http"),
                     domain: String::from("localhost:9000"),
                     put_base_uri: None,

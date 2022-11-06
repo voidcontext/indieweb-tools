@@ -97,31 +97,31 @@ mod test {
 
     use oauth2::{AccessToken, ClientId};
 
-    use crate::config::{DBConfig, MastodonConfig, TwitterConfig, WormholeConfig};
+    use crate::config::{Mastodon, Twitter, Wormhole, DB};
     use crate::social::Network;
     use crate::stubs::rss::{default_items, StubRssClient};
     use crate::stubs::syndycated_post::SyndicatedPostStorageStub;
     use crate::stubs::target::StubTarget;
     use crate::syndicated_post::{Storage, SyndicatedPost};
     use crate::target::stubs::FailingStubTarget;
-    use crate::{config::RSSConfig, Config};
+    use crate::{config::Rss, Config};
 
     use super::syndicate;
 
     fn config(urls: Vec<String>) -> Config {
         Config {
-            rss: RSSConfig { urls },
-            db: DBConfig {
+            rss: Rss { urls },
+            db: DB {
                 path: String::from("some/path"),
             },
-            twitter: TwitterConfig {
+            twitter: Twitter {
                 client_id: ClientId::new(String::from("some_client_id")),
             },
-            mastodon: MastodonConfig {
+            mastodon: Mastodon {
                 base_uri: String::from("https://example.com/mastodon"),
                 access_token: AccessToken::new(String::from("some-access-token")),
             },
-            wormhole: WormholeConfig {
+            wormhole: Wormhole {
                 protocol: String::from("http"),
                 domain: String::from("shortly"),
                 put_base_uri: Some(String::from("http://localhost:9000")),

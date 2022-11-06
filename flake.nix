@@ -48,6 +48,7 @@
         cargoArtifacts = indieweb-tools-deps;
         preCheck = ''
         cargo fmt --check
+        cargo clippy  -- -W clippy::pedantic -A clippy::missing-errors-doc -A clippy::missing-panics-doc
         '';
         
         inherit buildInputs nativeBuildInputs;

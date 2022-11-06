@@ -1,5 +1,6 @@
 use crate::PermashortCitation;
 
+#[must_use]
 pub fn shorten(text: &str, limit: usize) -> &str {
     let words = words(text);
     let mut len = 0;
@@ -12,6 +13,7 @@ pub fn shorten(text: &str, limit: usize) -> &str {
     &text[0..len]
 }
 
+#[must_use]
 pub fn shorten_with_permashort_citation(
     text: &str,
     limit: usize,

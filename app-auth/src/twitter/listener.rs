@@ -72,14 +72,15 @@ async fn receive_token(
     Extension(state): Extension<Arc<State>>,
 ) -> impl IntoResponse {
     let state_param = params.get("state").expect("state param not found");
-    if state_param != &state.oauth_state {
-        panic!(
-            "Invalid state param,
+
+    assert!(
+        state_param != &state.oauth_state,
+        "Invalid state param,
 expected: {}
 got     : {}",
-            state.oauth_state, state_param
-        )
-    }
+        state.oauth_state,
+        state_param
+    );
 
     let auth_code = params.get("code").expect("auth code param not found");
     log::debug!("Got auth code, exchanging for access token");

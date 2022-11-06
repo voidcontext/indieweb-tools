@@ -51,7 +51,7 @@ impl<DB: TokenDB> AuthedClient<DB> {
     ) -> Result<Response, Box<dyn std::error::Error>> {
         {
             let tokens = self.tokens.lock().await;
-            self.authorize_request(&mut request, &tokens);
+            authorize_request(&mut request, &tokens);
         }
 
         let mut cloned_request = request.try_clone().expect("Request cannot be cloned");
@@ -66,7 +66,7 @@ impl<DB: TokenDB> AuthedClient<DB> {
             log::debug!("token credentials lock acquired");
             *tokens = self.exchange_refresh_token(&tokens).await?;
 
-            self.authorize_request(&mut cloned_request, &tokens);
+            authorize_request(&mut cloned_request, &tokens);
             log::debug!(
                 "headers after token refresh: {:?}",
                 cloned_request.headers()
@@ -82,14 +82,6 @@ impl<DB: TokenDB> AuthedClient<DB> {
         } else {
             Ok(response)
         }
-    }
-
-    fn authorize_request(&self, request: &mut Request, tokens: &TokenCredentials) {
-        request.headers_mut().remove(AUTHORIZATION);
-        request.headers_mut().append(
-            AUTHORIZATION,
-            HeaderValue::from_str(&format!("Bearer {}", tokens.access_token.secret())).unwrap(),
-        );
     }
 
     async fn exchange_refresh_token(
@@ -133,4 +125,12 @@ impl<DB: TokenDB> AuthedClient<DB> {
             }
         }
     }
+}
+
+fn authorize_request(request: &mut Request, tokens: &TokenCredentials) {
+    request.headers_mut().remove(AUTHORIZATION);
+    request.headers_mut().append(
+        AUTHORIZATION,
+        HeaderValue::from_str(&format!("Bearer {}", tokens.access_token.secret())).unwrap(),
+    );
 }
