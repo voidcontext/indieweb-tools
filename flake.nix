@@ -27,33 +27,33 @@
         (optional pkgs.stdenv.isLinux pkgs.openssl) ++
         (optional (system == "x86_64-darwin")
           pkgs.darwin.apple_sdk.frameworks.Security);
-          
+
       craneLib = (inputs.crane.mkLib pkgs).overrideToolchain rust;
-      
+
       commonArgs = {
         src = craneLib.cleanCargoSource ./.;
-        
+
         inherit buildInputs nativeBuildInputs;
       };
-      
-      
+
+
       indieweb-tools-deps = craneLib.buildDepsOnly (commonArgs // {
         pname = "indieweb-tools";
       });
-      
+
       indieweb-tools = craneLib.buildPackage {
         src = craneLib.cleanCargoSource ./.;
         pname = "indieweb-tools";
         version = "0.1.0";
         cargoArtifacts = indieweb-tools-deps;
         preCheck = ''
-        cargo fmt --check
-        cargo clippy  -- -W clippy::pedantic -A clippy::missing-errors-doc -A clippy::missing-panics-doc
+          cargo fmt --check
+          cargo clippy  -- -W clippy::pedantic -A clippy::missing-errors-doc -A clippy::missing-panics-doc
         '';
-        
+
         inherit buildInputs nativeBuildInputs;
       };
-          
+
       mkApp = name: {
         "${name}" = {
           type = "app";
@@ -62,13 +62,13 @@
       };
     in
     rec {
-    
+
       checks = {
         inherit indieweb-tools;
       };
-      
+
       apps = (mkApp "orion") // (mkApp "app-auth") // (mkApp "janitor");
-    
+
       packages.default = indieweb-tools;
       packages.indieweb-tools-deps = indieweb-tools-deps;
 
