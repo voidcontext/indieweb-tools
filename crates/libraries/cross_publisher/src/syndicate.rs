@@ -97,14 +97,13 @@ mod test {
 
     use oauth2::{AccessToken, ClientId};
 
-    use crate::config::{Mastodon, Twitter, Wormhole, DB};
     use crate::social::Network;
     use crate::stubs::rss::{default_items, StubRssClient};
     use crate::stubs::syndycated_post::SyndicatedPostStorageStub;
     use crate::stubs::target::StubTarget;
     use crate::syndicated_post::{Storage, SyndicatedPost};
     use crate::target::stubs::FailingStubTarget;
-    use crate::{config::Rss, Config};
+    use iwt_config::{Config, Mastodon, Rss, Twitter, Wormhole, DB};
 
     use super::syndicate;
 

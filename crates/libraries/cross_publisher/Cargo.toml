@@ -1,5 +1,5 @@
 [package]
-name = "orion"
+name = "iwt_cross_publisher"
 version = "0.1.0"
 edition = "2021"
 
@@ -11,11 +11,11 @@ serde = "1.0"
 # serde_derive = "1.0"
 serde_json = "1.0"
 log = "0.4"
-simple_logger = "2.0"
+# simple_logger = "2.0"
 toml = "0.5"
 rss = "2.0"
 reqwest = {version = "0.11.11", features = ["json"]}
-tokio = { version = "1.20.0", features = ["full"] }
+# tokio = { version = "1.20.0", features = ["full"] }
 futures = "0.3.14"
 async-trait = "0.1.56"
 oauth2 = "4.2.3" #TODO: maybe we should re-export the models we need
@@ -29,5 +29,6 @@ iwt_config = { path = "../../libraries/config" }
 [dev-dependencies]
 url = "2.2.2"
 wiremock = "0.5"
+tokio = { version = "1.20.0", features = ["full"] }
 # iwt_commons = { path = "../libraries/commons" }
 iwt_commons_stubs = { path = "../../libraries/stubs" }

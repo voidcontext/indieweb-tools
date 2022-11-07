@@ -8,6 +8,9 @@ edition = "2021"
 [dependencies]
 clap = {version = "3.2", features = ["derive"]}
 tokio = { version = "1.20.0", features = ["full"] }
+log = "0.4"
+simple_logger = "2.0"
 
 iwt_config = { path = "../../libraries/config" }
 iwt_app_auth = { path = "../../libraries/app_auth" }
+iwt_cross_publisher = {path = "../../libraries/cross_publisher"}

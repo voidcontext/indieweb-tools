@@ -1,6 +1,5 @@
 [workspace]
 members = [
-  "crates/apps/cross_publisher",
   "crates/apps/iwt",
   "crates/apps/janitor",
   "crates/apps/url_shortener",
@@ -8,6 +7,7 @@ members = [
   "crates/libraries/app_auth",
   "crates/libraries/commons",
   "crates/libraries/config",
+  "crates/libraries/cross_publisher",
   "crates/libraries/mastodon",
   "crates/libraries/stubs",
   "crates/libraries/twitter",
