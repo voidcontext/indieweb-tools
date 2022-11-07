@@ -67,7 +67,7 @@
         inherit indieweb-tools;
       };
 
-      apps = (mkApp "orion") // (mkApp "app-auth") // (mkApp "janitor");
+      apps = (mkApp "app-auth") // (mkApp "cross-publisher") // (mkApp "janitor");
 
       packages.default = indieweb-tools;
       packages.indieweb-tools-deps = indieweb-tools-deps;

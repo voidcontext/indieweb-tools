@@ -22,4 +22,4 @@ rand = {version = "0.8.5", features = [ "getrandom" ]}
 url = "2.2.2"
 rusqlite = { version = "0.28.0", features = ["bundled"] }
 
-iwt_commons = { path = "../shared/commons" }
+iwt_commons = { path = "../../libraries/commons" }

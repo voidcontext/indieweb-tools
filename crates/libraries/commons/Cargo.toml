@@ -16,4 +16,4 @@ urlencoding = "2.1.2"
 [dev-dependencies]
 url = "2.2.2"
 wiremock = "0.5"
-iwt_commons_stubs = { path = "./stubs" }
+iwt_commons_stubs = { path = "../stubs" }

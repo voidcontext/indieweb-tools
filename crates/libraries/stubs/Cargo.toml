@@ -7,4 +7,4 @@ edition = "2021"
 
 [dependencies]
 oauth2 = "4.2.3"
-iwt_commons = { path = "../"}
+iwt_commons = { path = "../commons"}

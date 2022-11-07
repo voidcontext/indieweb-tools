@@ -23,11 +23,11 @@ async-mutex = "1.4.0"
 rusqlite = { version = "0.28.0", features = ["bundled"] }
 scraper = "0.13.0"
 
-iwt_commons = { path = "../shared/commons" }
+iwt_commons = { path = "../../libraries/commons" }
 
 [dev-dependencies]
 url = "2.2.2"
 wiremock = "0.5"
-iwt_commons = { path = "../shared/commons" }
-iwt_commons_stubs = { path = "../shared/commons/stubs" }
+# iwt_commons = { path = "../libraries/commons" }
+iwt_commons_stubs = { path = "../../libraries/stubs" }
 
