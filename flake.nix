@@ -53,13 +53,6 @@
 
         inherit buildInputs nativeBuildInputs;
       };
-
-      mkApp = name: {
-        "${name}" = {
-          type = "app";
-          program = "${indieweb-tools}/bin/${name}";
-        };
-      };
     in
     rec {
 
@@ -67,7 +60,10 @@
         inherit indieweb-tools;
       };
 
-      apps = (mkApp "app-auth") // (mkApp "cross-publisher") // (mkApp "janitor");
+      apps.iwt = {
+        type = "app";
+        program = "${indieweb-tools}/bin/iwt";
+      };
 
       packages.default = indieweb-tools;
       packages.indieweb-tools-deps = indieweb-tools-deps;
