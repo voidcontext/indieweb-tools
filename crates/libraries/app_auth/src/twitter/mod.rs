@@ -1,6 +1,6 @@
 use std::fmt::Display;
 
-use crate::Config;
+use iwt_config::Config;
 
 use rand::{rngs::OsRng, RngCore};
 
@@ -19,7 +19,7 @@ impl Display for Error {
 
 impl std::error::Error for Error {}
 
-pub async fn start_flow(config: &Config, db_path: Option<String>) -> Result<(), Error> {
+pub async fn start_flow(config: &Config) -> Result<(), Error> {
     // Create CSRF state and secret challenge
     let mut challenge = [0u8; 64];
     let mut csrf_state = [0u8; 64];
@@ -39,7 +39,7 @@ pub async fn start_flow(config: &Config, db_path: Option<String>) -> Result<(), 
         oauth_uri
     );
 
-    listener::start(config, &challenge, &csrf_state, db_path).await
+    listener::start(config, &challenge, &csrf_state).await
 }
 
 fn construct_uri(client_id: &str, csrf_state: &str, challenge: &str) -> String {

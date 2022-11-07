@@ -38,27 +38,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b9a8f622bcf6ff3df478e9deba3e03e4e04b300f8e6a139e192c05fa3490afc7"
 
 [[package]]
-name = "app-auth"
-version = "0.1.0"
-dependencies = [
- "axum",
- "base64",
- "clap",
- "iwt_commons",
- "log",
- "rand 0.8.5",
- "reqwest",
- "rusqlite",
- "serde",
- "serde_derive",
- "serde_json",
- "simple_logger",
- "tokio",
- "toml",
- "url",
-]
-
-[[package]]
 name = "assert-json-diff"
 version = "2.0.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1017,6 +996,37 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6c8af84674fe1f223a982c933a0ee1086ac4d4052aa0fb8060c12c6ad838e754"
 
 [[package]]
+name = "iwt"
+version = "0.1.0"
+dependencies = [
+ "clap",
+ "iwt_app_auth",
+ "iwt_config",
+ "tokio",
+]
+
+[[package]]
+name = "iwt_app_auth"
+version = "0.1.0"
+dependencies = [
+ "axum",
+ "base64",
+ "clap",
+ "iwt_commons",
+ "iwt_config",
+ "log",
+ "rand 0.8.5",
+ "reqwest",
+ "rusqlite",
+ "serde",
+ "serde_derive",
+ "serde_json",
+ "tokio",
+ "toml",
+ "url",
+]
+
+[[package]]
 name = "iwt_commons"
 version = "0.1.0"
 dependencies = [
@@ -1039,6 +1049,16 @@ version = "0.1.0"
 dependencies = [
  "iwt_commons",
  "oauth2",
+]
+
+[[package]]
+name = "iwt_config"
+version = "0.1.0"
+dependencies = [
+ "oauth2",
+ "serde",
+ "serde_derive",
+ "toml",
 ]
 
 [[package]]
@@ -1311,6 +1331,7 @@ dependencies = [
  "futures",
  "iwt_commons",
  "iwt_commons_stubs",
+ "iwt_config",
  "log",
  "oauth2",
  "reqwest",
@@ -1318,7 +1339,6 @@ dependencies = [
  "rusqlite",
  "scraper",
  "serde",
- "serde_derive",
  "serde_json",
  "simple_logger",
  "tokio",

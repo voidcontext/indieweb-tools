@@ -6,14 +6,13 @@ use crate::{
     syndicated_post::SqliteSyndycatedPostStorage, twitter::Twitter,
 };
 use clap::Parser;
-pub use config::Config;
 use iwt_commons::wormhole::ReqwestWormholeClient;
 pub use iwt_commons::*;
+use iwt_config::Config;
 use log::LevelFilter::{Debug, Info};
 use rusqlite::Connection;
 use simple_logger::SimpleLogger;
 
-mod config;
 mod mastodon;
 mod rss;
 mod syndicate;

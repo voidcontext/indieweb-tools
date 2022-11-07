@@ -48,7 +48,8 @@ impl PartialEq for Mastodon {
 
 impl Config {
     pub fn from_file(file_name: &str) -> Result<Config, toml::de::Error> {
-        let config_str = fs::read_to_string(file_name).unwrap();
+        let config_str = fs::read_to_string(file_name)
+            .unwrap_or_else(|_| panic!("Cannot found file: {}", file_name));
 
         toml::from_str(&config_str)
     }

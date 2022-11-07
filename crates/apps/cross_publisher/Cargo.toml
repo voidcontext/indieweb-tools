@@ -8,7 +8,7 @@ edition = "2021"
 [dependencies]
 clap = {version = "3.2", features = ["derive"]}
 serde = "1.0"
-serde_derive = "1.0"
+# serde_derive = "1.0"
 serde_json = "1.0"
 log = "0.4"
 simple_logger = "2.0"
@@ -18,16 +18,16 @@ reqwest = {version = "0.11.11", features = ["json"]}
 tokio = { version = "1.20.0", features = ["full"] }
 futures = "0.3.14"
 async-trait = "0.1.56"
-oauth2 = "4.2.3" #maybe we should re-export the models we need
+oauth2 = "4.2.3" #TODO: maybe we should re-export the models we need
 async-mutex = "1.4.0"
 rusqlite = { version = "0.28.0", features = ["bundled"] }
 scraper = "0.13.0"
 
 iwt_commons = { path = "../../libraries/commons" }
+iwt_config = { path = "../../libraries/config" }
 
 [dev-dependencies]
 url = "2.2.2"
 wiremock = "0.5"
 # iwt_commons = { path = "../libraries/commons" }
 iwt_commons_stubs = { path = "../../libraries/stubs" }
-

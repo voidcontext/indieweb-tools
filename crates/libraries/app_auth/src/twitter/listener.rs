@@ -16,22 +16,17 @@ use serde_derive::Deserialize;
 use tokio::sync::mpsc::Sender;
 
 use super::Error;
-use crate::Config;
+use iwt_config::Config;
 
 struct State {
     challenge: String,
     oauth_state: String,
     client_id: String,
     shutdown_signal: Sender<()>,
-    db_path: Option<String>,
+    db_path: String,
 }
 
-pub async fn start(
-    config: &Config,
-    challenge: &str,
-    csrf_state: &str,
-    db_path: Option<String>,
-) -> Result<(), Error> {
+pub async fn start(config: &Config, challenge: &str, csrf_state: &str) -> Result<(), Error> {
     // Create a channel to be able to shut down the webserver from the
     // Request handler after receiving the auth code
     let (tx, mut rx) = tokio::sync::mpsc::channel::<()>(10);
@@ -40,9 +35,9 @@ pub async fn start(
     let state = Arc::new(State {
         challenge: challenge.to_string(),
         oauth_state: csrf_state.to_string(),
-        client_id: config.twitter.client_id.clone(),
+        client_id: config.twitter.client_id.to_string(),
         shutdown_signal: tx,
-        db_path,
+        db_path: config.db.path.clone(),
     });
 
     let sock_addr = SocketAddr::new(IpAddr::V4(Ipv4Addr::LOCALHOST), 6009);
@@ -118,9 +113,10 @@ refresh_token: {}
         tokens.token_type, tokens.access_token, tokens.refresh_token
     );
 
-    if let Some(db_path) = state.db_path.clone() {
-        persist_tokens(&tokens, &db_path).expect("couldn't persist tokens");
-    }
+    // TODO: add argument to be able to disable updating the db
+    // if let Some(db_path) = state.db_path.clone() {
+    persist_tokens(&tokens, &state.db_path).expect("couldn't persist tokens");
+    // }
 
     // Send the shut down signal
     state.shutdown_signal.send(()).await.unwrap();

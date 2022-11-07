@@ -1,11 +1,13 @@
 [workspace]
 members = [
-  "crates/apps/app_auth",
   "crates/apps/cross_publisher",
+  "crates/apps/iwt",
   "crates/apps/janitor",
   "crates/apps/url_shortener",
 
+  "crates/libraries/app_auth",
   "crates/libraries/commons",
+  "crates/libraries/config",
   "crates/libraries/mastodon",
   "crates/libraries/stubs",
   "crates/libraries/twitter",

@@ -1,5 +1,5 @@
 [package]
-name = "app-auth"
+name = "iwt_app_auth"
 version = "0.1.0"
 edition = "2021"
 
@@ -12,14 +12,14 @@ serde = "1.0"
 serde_derive = "1.0"
 serde_json = "1.0"
 log = "0.4"
-simple_logger = "2.0"
 reqwest = "0.11.11"
 toml = "0.5"
-tokio = { version = "1.20.0", features = ["full"] }
+tokio = { version = "1.20.0", features = ["full"] } #TODO: do we need full here?
 axum = "0.5.13"
 base64 = "0.13.0"
 rand = {version = "0.8.5", features = [ "getrandom" ]}
 url = "2.2.2"
 rusqlite = { version = "0.28.0", features = ["bundled"] }
 
-iwt_commons = { path = "../../libraries/commons" }
+iwt_commons = { path = "../commons" }
+iwt_config = { path = "../config" }
