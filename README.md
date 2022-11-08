@@ -8,7 +8,7 @@ My collection of indieweb tools
   - [app-auth](crates/libraries/app_auth): Oauth2 app authentication helper
   - [cross-publish](crates/libraries/cross_publisher): Microblog syndication to Twitter and Mastodon
   
-- [url shortener](crates/apps/url-shortener)
+- [url shortener](crates/apps/url_shortener)
 
 ## Basic usage
 
@@ -44,5 +44,5 @@ $ nix run .#iwt -- --config indieweb.toml app-auth twitter
 3) Syndicate posts to Twitter and Mastodon
 
 ```bash
-$ nix run .#iwt -- --config=indieweb.toml cross-publish
+$ nix run .#iwt -- --config indieweb.toml cross-publish
 ```
