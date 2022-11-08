@@ -5,7 +5,7 @@ use crate::{
     auth::token_db::SqliteTokenDB, mastodon::Mastodon,
     syndicated_post::SqliteSyndycatedPostStorage, twitter::Twitter,
 };
-use iwt_commons::wormhole::ReqwestWormholeClient;
+use iwt_commons::url_shortener::ReqwestClient;
 pub use iwt_commons::*;
 use iwt_config::Config;
 use rusqlite::Connection;
@@ -22,22 +22,22 @@ pub async fn execute(config: &Config) -> Result<(), Box<dyn std::error::Error>> 
 
     let token_db = Rc::new(SqliteTokenDB::new(Rc::clone(&conn)));
 
-    let wormhole_client = Rc::new(ReqwestWormholeClient::new(
-        &config.wormhole.protocol,
-        &config.wormhole.domain,
-        config.wormhole.put_base_uri.as_ref(),
+    let url_shortener_client = Rc::new(ReqwestClient::new(
+        &config.url_shortener.protocol,
+        &config.url_shortener.domain,
+        config.url_shortener.put_base_uri.as_ref(),
     ));
 
     let targets: Vec<Box<dyn Target>> = vec![
         Box::new(Twitter::new(
             config.twitter.client_id.clone(),
             token_db,
-            Rc::clone(&wormhole_client),
+            Rc::clone(&url_shortener_client),
         )),
         Box::new(Mastodon::new(
             config.mastodon.base_uri.clone(),
             config.mastodon.access_token.clone(),
-            Rc::clone(&wormhole_client),
+            Rc::clone(&url_shortener_client),
         )),
     ];
 

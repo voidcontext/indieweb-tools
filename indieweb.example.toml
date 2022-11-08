@@ -13,6 +13,6 @@ client_id = "your_client_id..."
 base_uri = "http://your-mastodon-instance.example.com"
 access_token = "your_access_token..."
 
-[wormhole]
+[url_shortener]
 protocol = "https"
 domain = "short.domain"

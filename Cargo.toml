@@ -1,7 +1,6 @@
 [workspace]
 members = [
   "crates/apps/iwt",
-  "crates/apps/janitor",
   "crates/apps/url_shortener",
 
   "crates/libraries/app_auth",

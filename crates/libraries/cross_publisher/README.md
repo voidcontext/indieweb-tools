@@ -1,6 +1,6 @@
-# Orion
+# Cross Publisher
 
-Orion syndicates microblog posts to Twitter and Mastodon
+Syndicates microblog posts to Twitter and Mastodon
 
 
 ## Development
@@ -8,18 +8,18 @@ Orion syndicates microblog posts to Twitter and Mastodon
 Incremental builds using `cargo`:
 
 ```bash
-$ nix develop .. -c cargo build
+$ nix develop -c cargo build -p iwt_cross_publisher
 ```
 
 Running the application using cargo (incremental build)
 
 ```bash
-$ nix develop .. -c cargo run -- --help
+$ nix develop -c cargo run -p iwt -- --config indieweb.toml cross-publish --help
 ```
 
 Running the application using nix:
 
 ```bash
-$ nix run ..#orion -- --help
+$ nix run .#iwt --config indieweb.toml cross-publish --help
 ```
 

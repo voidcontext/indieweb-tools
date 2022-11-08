@@ -21,7 +21,7 @@ impl From<reqwest::Error> for ClientError {
 
 impl Display for ClientError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.write_fmt(format_args!("Wormhole Client Error: {}", self.message))
+        f.write_fmt(format_args!("UrlShortener Client Error: {}", self.message))
     }
 }
 
@@ -32,14 +32,14 @@ pub trait Client {
     async fn put_uri(&self, uri: &str) -> Result<PermashortCitation, ClientError>;
 }
 
-pub struct ReqwestWormholeClient {
+pub struct ReqwestClient {
     protocol: String,
     domain: String,
     base_uri: String,
     client: reqwest::Client,
 }
 
-impl ReqwestWormholeClient {
+impl ReqwestClient {
     #[must_use]
     pub fn new(protocol: &str, domain: &str, put_base_uri: Option<&String>) -> Self {
         Self {
@@ -54,7 +54,7 @@ impl ReqwestWormholeClient {
 }
 
 #[async_trait(?Send)]
-impl Client for ReqwestWormholeClient {
+impl Client for ReqwestClient {
     async fn put_uri(&self, uri: &str) -> Result<PermashortCitation, ClientError> {
         let response = self
             .client

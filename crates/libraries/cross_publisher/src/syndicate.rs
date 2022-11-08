@@ -103,7 +103,7 @@ mod test {
     use crate::stubs::target::StubTarget;
     use crate::syndicated_post::{Storage, SyndicatedPost};
     use crate::target::stubs::FailingStubTarget;
-    use iwt_config::{Config, Mastodon, Rss, Twitter, Wormhole, DB};
+    use iwt_config::{Config, Mastodon, Rss, Twitter, UrlShortener, DB};
 
     use super::syndicate;
 
@@ -120,7 +120,7 @@ mod test {
                 base_uri: String::from("https://example.com/mastodon"),
                 access_token: AccessToken::new(String::from("some-access-token")),
             },
-            wormhole: Wormhole {
+            url_shortener: UrlShortener {
                 protocol: String::from("http"),
                 domain: String::from("shortly"),
                 put_base_uri: Some(String::from("http://localhost:9000")),

@@ -4,10 +4,11 @@ My collection of indieweb tools
 
 ## Components
 
-- [app-auth](app-auth/): Oauth2 app authentication helper
-- [janitor](janitor/): [TODO] clean up tool (removing test posts from social networks, etc.)
-- [orion](orion/): Microblog syndication to Twitter and Mastodon
-- [wormhole](wormhole/): [TODO] Url shortener
+- [indieweb tools](crates/apps/iwt), `iwt` commands:
+  - [app-auth](crates/libraries/app_auth): Oauth2 app authentication helper
+  - [cross-publish](crates/libraries/cross_publisher): Microblog syndication to Twitter and Mastodon
+  
+- [url shortener](crates/apps/url-shortener)
 
 ## Basic usage
 
@@ -29,7 +30,7 @@ client_id = "your_client_id..."
 base_uri = "http://your-mastodon-instance.example.com"
 access_token = "your_access_token..."
 
-[wormhole]
+[url_shortener]
 protocol = "https"
 domain = "short.domain"
 ```
@@ -37,11 +38,11 @@ domain = "short.domain"
 2) Get Twitter auth tokens:
 
 ```bash
-$ nix run .#app-auth -- --config indieweb.toml --db-path indieweb.db auth twitter
+$ nix run .#iwt -- --config indieweb.toml app-auth twitter
 ```
 
 3) Syndicate posts to Twitter and Mastodon
 
 ```bash
-$ nix run .#orion -- --config=indieweb.toml
+$ nix run .#iwt -- --config=indieweb.toml cross-publish
 ```

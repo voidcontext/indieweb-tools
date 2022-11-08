@@ -1009,6 +1009,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "iwt-url-shortener"
+version = "0.1.0"
+dependencies = [
+ "axum",
+ "rand 0.8.5",
+ "rusqlite",
+ "tokio",
+ "tokio-rusqlite",
+]
+
+[[package]]
 name = "iwt_app_auth"
 version = "0.1.0"
 dependencies = [
@@ -1088,10 +1099,6 @@ dependencies = [
  "url",
  "wiremock",
 ]
-
-[[package]]
-name = "janitor"
-version = "0.1.0"
 
 [[package]]
 name = "js-sys"
@@ -2696,15 +2703,4 @@ dependencies = [
  "serde",
  "serde_json",
  "tokio",
-]
-
-[[package]]
-name = "wormhole"
-version = "0.1.0"
-dependencies = [
- "axum",
- "rand 0.8.5",
- "rusqlite",
- "tokio",
- "tokio-rusqlite",
 ]

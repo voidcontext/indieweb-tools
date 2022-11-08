@@ -3,25 +3,29 @@ use std::rc::Rc;
 use crate::{social::Network, syndicated_post::SyndicatedPost, target::Target};
 use async_trait::async_trait;
 use futures::TryFutureExt;
-use iwt_commons::{text, wormhole};
+use iwt_commons::{text, url_shortener};
 use oauth2::AccessToken;
 use reqwest::Client;
 use rss::Item;
 
-pub struct Mastodon<WHClient: wormhole::Client> {
+pub struct Mastodon<USClient: url_shortener::Client> {
     base_uri: String,
     access_token: AccessToken,
     http_client: Client,
-    wormhole_client: Rc<WHClient>,
+    url_shortener_client: Rc<USClient>,
 }
 
-impl<WHClient: wormhole::Client> Mastodon<WHClient> {
-    pub fn new(base_uri: String, access_token: AccessToken, wormhole_client: Rc<WHClient>) -> Self {
+impl<USClient: url_shortener::Client> Mastodon<USClient> {
+    pub fn new(
+        base_uri: String,
+        access_token: AccessToken,
+        url_shortener_client: Rc<USClient>,
+    ) -> Self {
         Self {
             base_uri,
             access_token,
             http_client: Client::new(),
-            wormhole_client,
+            url_shortener_client,
         }
     }
 }
@@ -37,7 +41,7 @@ struct MastodonResponse {
 }
 
 #[async_trait(?Send)]
-impl<WHClient: wormhole::Client> Target for Mastodon<WHClient> {
+impl<WHClient: url_shortener::Client> Target for Mastodon<WHClient> {
     async fn publish<'a>(
         &self,
         post: &Item,
@@ -45,7 +49,7 @@ impl<WHClient: wormhole::Client> Target for Mastodon<WHClient> {
         log::debug!("processing post: {:?}", post);
 
         let permashort_citation = self
-            .wormhole_client
+            .url_shortener_client
             .put_uri(post.link.as_ref().unwrap())
             .await?;
 

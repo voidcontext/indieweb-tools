@@ -3,7 +3,7 @@ use std::{error::Error, fmt::Display};
 pub mod auth;
 pub mod social;
 pub mod text;
-pub mod wormhole;
+pub mod url_shortener;
 
 mod permashort_link;
 

@@ -22,11 +22,12 @@ struct State {
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let db_path = env::var("WORMHOLE_DB_PATH").expect("WORMHOLE_DB_PATH must be set.");
-    let http_port = env::var("WORMHOLE_HTTP_PORT")
-        .expect("WORMHOLE_HTTP_PORT must be set.")
+    let db_path =
+        env::var("IWT_URL_SHORTENER_DB_PATH").expect("IWT_URL_SHORTENER_DB_PATH must be set.");
+    let http_port = env::var("IWT_URL_SHORTENER_HTTP_PORT")
+        .expect("IWT_URL_SHORTENER_HTTP_PORT must be set.")
         .parse()
-        .expect("WORMHOLE_HTTP_PORT cannot be parsed as u16");
+        .expect("IWT_URL_SHORTENER_HTTP_PORT cannot be parsed as u16");
     let db_conn = Connection::open(db_path).await.unwrap();
     db_conn
         .call(|conn| {

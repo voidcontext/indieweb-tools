@@ -9,7 +9,7 @@ pub struct Config {
     pub db: DB,
     pub twitter: Twitter,
     pub mastodon: Mastodon,
-    pub wormhole: Wormhole,
+    pub url_shortener: UrlShortener,
 }
 
 #[derive(Debug, Deserialize, PartialEq)]
@@ -34,7 +34,7 @@ pub struct Mastodon {
 }
 
 #[derive(Debug, Deserialize, PartialEq)]
-pub struct Wormhole {
+pub struct UrlShortener {
     pub protocol: String,
     pub domain: String,
     pub put_base_uri: Option<String>,
@@ -64,7 +64,7 @@ mod test {
     use super::Mastodon;
     use super::Rss;
     use super::Twitter;
-    use super::Wormhole;
+    use super::UrlShortener;
     use super::DB;
 
     #[test]
@@ -82,7 +82,7 @@ mod test {
         [mastodon]
         base_uri = "https://mastodon.social"
         access_token = "some-access-token"
-        [wormhole]
+        [url_shortener]
         protocol = "http"
         domain = "localhost:9000"
         "#;
@@ -106,7 +106,7 @@ mod test {
                     base_uri: String::from("https://mastodon.social"),
                     access_token: AccessToken::new(String::from("some-access-token"))
                 },
-                wormhole: Wormhole {
+                url_shortener: UrlShortener {
                     protocol: String::from("http"),
                     domain: String::from("localhost:9000"),
                     put_base_uri: None,

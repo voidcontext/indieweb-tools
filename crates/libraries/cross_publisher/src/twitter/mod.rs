@@ -11,16 +11,16 @@ use crate::auth::token_db::TokenDB;
 use crate::social::Network;
 use crate::syndicated_post::SyndicatedPost;
 use crate::{auth::oauth::AuthedClient, target::Target};
-use iwt_commons::wormhole;
+use iwt_commons::url_shortener;
 
-pub struct Twitter<DB: TokenDB, WHClient: wormhole::Client> {
+pub struct Twitter<DB: TokenDB, USClient: url_shortener::Client> {
     authed_client: AuthedClient<DB>,
     http_client: Client,
-    wormhole_client: Rc<WHClient>,
+    url_shortener_client: Rc<USClient>,
 }
 
-impl<DB: TokenDB, WHClient: wormhole::Client> Twitter<DB, WHClient> {
-    pub fn new(client_id: ClientId, db: Rc<DB>, wormhole_client: Rc<WHClient>) -> Self {
+impl<DB: TokenDB, USClient: url_shortener::Client> Twitter<DB, USClient> {
+    pub fn new(client_id: ClientId, db: Rc<DB>, url_shortener_client: Rc<USClient>) -> Self {
         Self {
             authed_client: AuthedClient::new(
                 Network::Twitter,
@@ -37,7 +37,7 @@ impl<DB: TokenDB, WHClient: wormhole::Client> Twitter<DB, WHClient> {
                 db,
             ),
             http_client: Client::new(),
-            wormhole_client,
+            url_shortener_client,
         }
     }
 }
@@ -58,7 +58,7 @@ struct TweetResponseData {
 }
 
 #[async_trait(?Send)]
-impl<DB: TokenDB, WHClient: wormhole::Client> Target for Twitter<DB, WHClient> {
+impl<DB: TokenDB, WHClient: url_shortener::Client> Target for Twitter<DB, WHClient> {
     async fn publish<'a>(
         &self,
         post: &Item,
@@ -66,7 +66,7 @@ impl<DB: TokenDB, WHClient: wormhole::Client> Target for Twitter<DB, WHClient> {
         log::debug!("processing post: {:?}", post);
 
         let permashort_citation = self
-            .wormhole_client
+            .url_shortener_client
             .put_uri(post.link.as_ref().unwrap())
             .await?;
 
