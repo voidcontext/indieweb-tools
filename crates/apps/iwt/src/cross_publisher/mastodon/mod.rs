@@ -1,9 +1,11 @@
 use std::rc::Rc;
 
-use crate::{social::Network, syndicated_post::SyndicatedPost, target::Target};
+use super::syndicated_post::SyndicatedPost;
+use super::target::Target;
+use crate::commons::{text, url_shortener};
+use crate::social::Network;
 use async_trait::async_trait;
 use futures::TryFutureExt;
-use iwt_commons::{text, url_shortener};
 use oauth2::AccessToken;
 use reqwest::Client;
 use rss::Item;

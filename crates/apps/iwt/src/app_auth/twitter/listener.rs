@@ -4,19 +4,19 @@ use std::{
     sync::Arc,
 };
 
+use crate::social::Network::Twitter;
 use axum::{
     extract::Query,
     response::{Html, IntoResponse},
     routing::get,
     Extension, Router,
 };
-use iwt_commons::social::Network::Twitter;
 use rusqlite::Connection;
 use serde_derive::Deserialize;
 use tokio::sync::mpsc::Sender;
 
 use super::Error;
-use iwt_config::Config;
+use crate::config::Config;
 
 struct State {
     challenge: String,

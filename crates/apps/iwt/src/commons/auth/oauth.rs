@@ -134,3 +134,4 @@ fn authorize_request(request: &mut Request, tokens: &TokenCredentials) {
         HeaderValue::from_str(&format!("Bearer {}", tokens.access_token.secret())).unwrap(),
     );
 }
+

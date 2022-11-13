@@ -4,7 +4,13 @@ use clap::Subcommand;
 use log::LevelFilter::{Debug, Info};
 use simple_logger::SimpleLogger;
 
-use iwt_config::Config;
+mod app_auth;
+pub mod commons;
+pub mod config;
+mod cross_publisher;
+pub mod social;
+
+use config::Config;
 
 #[derive(Parser)]
 #[clap(author, version, about, long_about = None)]
@@ -25,7 +31,7 @@ enum Command {
     /// App Authentication helper
     AppAuth {
         #[clap(subcommand)]
-        sub_command: iwt_app_auth::AuthSubcommand,
+        sub_command: app_auth::AuthSubcommand,
     },
     /// Cross publish posts
     CrossPublish,
@@ -41,7 +47,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let config = Config::from_file(&cli.config)?;
 
     match cli.command {
-        Command::AppAuth { sub_command } => iwt_app_auth::execute(sub_command, &config).await,
-        Command::CrossPublish => iwt_cross_publisher::execute(&config).await,
+        Command::AppAuth { sub_command } => app_auth::execute(sub_command, &config).await,
+        Command::CrossPublish => cross_publisher::execute(&config).await,
     }
 }
+
+#[cfg(test)]
+pub mod stubs;

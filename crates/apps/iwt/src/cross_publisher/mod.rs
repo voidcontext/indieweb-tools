@@ -1,14 +1,13 @@
 use std::rc::Rc;
 
-pub use crate::target::Target;
-use crate::{
-    auth::token_db::SqliteTokenDB, mastodon::Mastodon,
-    syndicated_post::SqliteSyndycatedPostStorage, twitter::Twitter,
-};
-use iwt_commons::url_shortener::ReqwestClient;
-pub use iwt_commons::*;
-use iwt_config::Config;
+use crate::commons::auth::token_db::SqliteTokenDB;
+use crate::commons::url_shortener::ReqwestClient;
+use crate::config::Config;
+use mastodon::Mastodon;
 use rusqlite::Connection;
+use syndicated_post::SqliteSyndycatedPostStorage;
+use target::Target;
+use twitter::Twitter;
 
 mod mastodon;
 mod rss;
@@ -51,7 +50,7 @@ pub async fn execute(config: &Config) -> Result<(), Box<dyn std::error::Error>> 
 
 #[cfg(test)]
 pub mod stubs {
-    pub use crate::rss::stubs as rss;
-    pub use crate::syndicated_post::stubs as syndycated_post;
-    pub use crate::target::stubs as target;
+    pub use crate::cross_publisher::rss::stubs as rss;
+    pub use crate::cross_publisher::syndicated_post::stubs as syndycated_post;
+    pub use crate::cross_publisher::target::stubs as target;
 }

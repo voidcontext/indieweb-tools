@@ -1,4 +1,4 @@
-use iwt_config::Config;
+use crate::config::Config;
 
 use clap::Subcommand;
 

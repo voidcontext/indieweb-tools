@@ -11,6 +11,28 @@ tokio = { version = "1.20.0", features = ["full"] }
 log = "0.4"
 simple_logger = "2.0"
 
-iwt_config = { path = "../../libraries/config" }
-iwt_app_auth = { path = "../../libraries/app_auth" }
-iwt_cross_publisher = {path = "../../libraries/cross_publisher"}
+serde = "1.0"
+serde_derive = "1.0"
+serde_json = "1.0"
+oauth2 = "4.2.3" 
+toml = "0.5"
+
+reqwest = {version = "0.11.11", features = ["json"]}
+rss = "2.0"
+futures = "0.3.14"
+
+axum = "0.5.13"
+base64 = "0.13.0"
+rand = {version = "0.8.5", features = [ "getrandom" ]}
+url = "2.2.2"
+rusqlite = { version = "0.28.0", features = ["bundled"] }
+
+async-mutex = "1.4.0"
+async-trait = "0.1.56"
+urlencoding = "2.1.2"
+
+scraper = "0.13.0"
+
+[dev-dependencies]
+wiremock = "0.5"
+

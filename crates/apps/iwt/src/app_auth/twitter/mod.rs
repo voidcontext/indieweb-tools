@@ -1,6 +1,6 @@
 use std::fmt::Display;
 
-use iwt_config::Config;
+use crate::config::Config;
 
 use rand::{rngs::OsRng, RngCore};
 

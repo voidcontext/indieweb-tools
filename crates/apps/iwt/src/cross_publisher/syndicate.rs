@@ -1,9 +1,9 @@
-use crate::rss;
+use super::rss;
 use ::rss::Channel;
 use futures::{Future, FutureExt, StreamExt, TryFutureExt};
 
-use crate::syndicated_post;
-use crate::target::Target;
+use super::syndicated_post;
+use super::target::Target;
 use crate::Config;
 
 /// Orchestrates syndication
@@ -97,13 +97,13 @@ mod test {
 
     use oauth2::{AccessToken, ClientId};
 
+    use super::syndicated_post::{Storage, SyndicatedPost};
+    use crate::config::{Config, Mastodon, Rss, Twitter, UrlShortener, DB};
+    use crate::cross_publisher::stubs::rss::{default_items, StubRssClient};
+    use crate::cross_publisher::stubs::syndycated_post::SyndicatedPostStorageStub;
+    use crate::cross_publisher::stubs::target::FailingStubTarget;
+    use crate::cross_publisher::stubs::target::StubTarget;
     use crate::social::Network;
-    use crate::stubs::rss::{default_items, StubRssClient};
-    use crate::stubs::syndycated_post::SyndicatedPostStorageStub;
-    use crate::stubs::target::StubTarget;
-    use crate::syndicated_post::{Storage, SyndicatedPost};
-    use crate::target::stubs::FailingStubTarget;
-    use iwt_config::{Config, Mastodon, Rss, Twitter, UrlShortener, DB};
 
     use super::syndicate;
 

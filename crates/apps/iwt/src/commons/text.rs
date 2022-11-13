@@ -1,4 +1,4 @@
-use crate::PermashortCitation;
+use super::permashort_link::PermashortCitation;
 
 #[must_use]
 pub fn shorten(text: &str, limit: usize) -> &str {

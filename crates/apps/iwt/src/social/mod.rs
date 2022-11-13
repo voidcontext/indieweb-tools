@@ -2,7 +2,7 @@ use std::fmt::Display;
 
 use rusqlite::types::{FromSql, FromSqlError};
 
-use crate::SqlConversionError;
+use crate::commons::SqlConversionError;
 
 #[derive(Debug, PartialEq, Eq, Clone, PartialOrd, Ord)]
 pub enum Network {

@@ -1,8 +1,8 @@
+use crate::social::Network;
 use async_trait::async_trait;
-use iwt_commons::social::Network;
 use rss::Item;
 
-use crate::syndicated_post::SyndicatedPost;
+use super::syndicated_post::SyndicatedPost;
 
 #[async_trait(?Send)]
 pub trait Target {
@@ -22,7 +22,8 @@ pub mod stubs {
     use async_trait::async_trait;
     use rss::Item;
 
-    use crate::{social::Network, syndicated_post::SyndicatedPost};
+    use crate::cross_publisher::syndicated_post::SyndicatedPost;
+    use crate::social::Network;
 
     use super::Target;
 

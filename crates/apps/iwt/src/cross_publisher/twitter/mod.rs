@@ -1,17 +1,18 @@
 use std::rc::Rc;
 
+use crate::commons::text;
 use async_trait::async_trait;
 use futures::TryFutureExt;
-use iwt_commons::text;
 use oauth2::{basic::BasicClient, AuthUrl, ClientId, TokenUrl};
 use reqwest::Client;
 use rss::Item;
 
-use crate::auth::token_db::TokenDB;
+use super::syndicated_post::SyndicatedPost;
+use super::target::Target;
+use crate::commons::auth::oauth::AuthedClient;
+use crate::commons::auth::token_db::TokenDB;
+use crate::commons::url_shortener;
 use crate::social::Network;
-use crate::syndicated_post::SyndicatedPost;
-use crate::{auth::oauth::AuthedClient, target::Target};
-use iwt_commons::url_shortener;
 
 pub struct Twitter<DB: TokenDB, USClient: url_shortener::Client> {
     authed_client: AuthedClient<DB>,
