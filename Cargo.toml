@@ -7,7 +7,5 @@ members = [
   "crates/libraries/commons",
   "crates/libraries/config",
   "crates/libraries/cross_publisher",
-  "crates/libraries/mastodon",
   "crates/libraries/stubs",
-  "crates/libraries/twitter",
 ]
