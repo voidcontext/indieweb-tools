@@ -73,6 +73,8 @@
           rust
           pkgs.cargo-outdated
           pkgs.cargo-watch
+          pkgs.cargo-bloat
+          pkgs.cargo-udeps
           pkgs.rust-analyzer
           pkgs.rustfmt
           pkgs.nixpkgs-fmt
