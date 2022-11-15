@@ -11,12 +11,13 @@ use twitter::Twitter;
 
 mod mastodon;
 mod rss;
+mod rss_item_ext;
 mod syndicate;
 mod syndicated_post;
 mod target;
 mod twitter;
 
-pub async fn execute(config: &Config) -> Result<(), Box<dyn std::error::Error>> {
+pub async fn execute(config: &Config, dry_run: bool) -> Result<(), Box<dyn std::error::Error>> {
     let conn = Rc::new(Connection::open(&config.db.path).expect("Couldn't open DB"));
 
     let token_db = Rc::new(SqliteTokenDB::new(Rc::clone(&conn)));
@@ -45,7 +46,7 @@ pub async fn execute(config: &Config) -> Result<(), Box<dyn std::error::Error>> 
         .init_table()
         .expect("Couldn't initialise post storage");
 
-    syndicate::syndicate(config, &rss::ReqwestClient, &targets, &storage).await
+    syndicate::syndicate(config, &rss::ReqwestClient, &targets, &storage, dry_run).await
 }
 
 #[cfg(test)]

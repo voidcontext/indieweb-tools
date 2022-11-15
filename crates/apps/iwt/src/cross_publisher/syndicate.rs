@@ -12,6 +12,7 @@ pub async fn syndicate<R, S>(
     rss_client: &R,
     targets: &[Box<dyn Target>],
     storage: &S,
+    dry_run: bool,
 ) -> Result<(), Box<dyn std::error::Error>>
 where
     R: rss::Client,
@@ -21,7 +22,7 @@ where
     run_and_collect(config.rss.urls.iter(), |url| {
         rss_client
             .get_channel(url)
-            .and_then(|channel| syndycate_channel(channel, targets, storage))
+            .and_then(|channel| syndycate_channel(channel, targets, storage, dry_run))
     })
     .await
 }
@@ -31,6 +32,7 @@ async fn syndycate_channel<S: syndicated_post::Storage>(
     channel: Channel,
     targets: &[Box<dyn Target>],
     storage: &S,
+    dry_run: bool,
 ) -> Result<(), Box<dyn std::error::Error>> {
     run_and_collect(targets.iter(), |target| {
         run_and_collect(channel.items.iter(), |post| {
@@ -48,16 +50,21 @@ async fn syndycate_channel<S: syndicated_post::Storage>(
                             " -> Post not found in DB, syndycating to {}",
                             target.network().to_string()
                         );
-                        target
-                            .publish(post)
-                            .map(|result| {
-                                result.and_then(|syndicated| {
-                                    storage
-                                        .store(syndicated)
-                                        .map_err(|err| Box::new(err) as Box<dyn std::error::Error>)
+
+                        if dry_run {
+                            Ok(())
+                        } else {
+                            target
+                                .publish(post)
+                                .map(|result| {
+                                    result.and_then(|syndicated| {
+                                        storage.store(syndicated).map_err(|err| {
+                                            Box::new(err) as Box<dyn std::error::Error>
+                                        })
+                                    })
                                 })
-                            })
-                            .await
+                                .await
+                        }
                     }
                     Ok(Some(_)) => {
                         log::info!(
@@ -143,6 +150,7 @@ mod test {
             &client,
             &targets,
             &SyndicatedPostStorageStub::default(),
+            false,
         )
         .await
         .expect("Should be Ok()");
@@ -168,6 +176,7 @@ mod test {
             &client,
             &targets,
             &SyndicatedPostStorageStub::default(),
+            false,
         )
         .await
         .expect("Should be Ok()");
@@ -192,6 +201,7 @@ mod test {
             &client,
             &targets,
             &SyndicatedPostStorageStub::default(),
+            false,
         )
         .await
         .expect("Should be Ok()");
@@ -224,7 +234,7 @@ mod test {
                 .unwrap();
         }
 
-        syndicate(&config, &client, &targets, &storage)
+        syndicate(&config, &client, &targets, &storage, false)
             .await
             .expect("Should be Ok()");
 
@@ -252,6 +262,7 @@ mod test {
             &client,
             &targets,
             &SyndicatedPostStorageStub::default(),
+            false,
         )
         .await
         .expect("Should be Ok()");
@@ -264,6 +275,37 @@ mod test {
 
         assert_eq!(*calls1, expected);
         assert_eq!(*calls2, expected);
+    }
+
+    #[tokio::test]
+    async fn test_syndycate_does_not_publish_when_dry_run_is_true() {
+        let feed1 = "http://example.com/rss.xml";
+        let feed2 = "https://blog.example.com/rss.xml";
+        let config = config(vec![feed1.to_string(), feed2.to_string()]);
+
+        let client = StubRssClient::default();
+        let stub_target1 = StubTarget::new(Network::Mastodon);
+        let target_calls1 = Arc::clone(&stub_target1.calls);
+        let stub_target2 = StubTarget::new(Network::Twitter);
+        let target_calls2 = Arc::clone(&stub_target2.calls);
+
+        let targets = vec![stub_target1.into(), stub_target2.into()];
+
+        syndicate(
+            &config,
+            &client,
+            &targets,
+            &SyndicatedPostStorageStub::default(),
+            true,
+        )
+        .await
+        .expect("Should be Ok()");
+
+        let calls1 = (*target_calls1).lock().await;
+        let calls2 = (*target_calls2).lock().await;
+
+        assert!(calls1.is_empty());
+        assert!(calls2.is_empty());
     }
 
     #[tokio::test]
@@ -285,6 +327,7 @@ mod test {
             &client,
             &targets,
             &SyndicatedPostStorageStub::default(),
+            false,
         )
         .await;
 
@@ -315,6 +358,7 @@ mod test {
             &client,
             &targets,
             &SyndicatedPostStorageStub::default(),
+            false,
         )
         .await;
 
@@ -340,7 +384,7 @@ mod test {
         let targets = vec![stub_target1.into(), stub_target2.into()];
         let storage = SyndicatedPostStorageStub::default();
 
-        syndicate(&config, &client, &targets, &storage)
+        syndicate(&config, &client, &targets, &storage, false)
             .await
             .expect("Should be Ok()");
 

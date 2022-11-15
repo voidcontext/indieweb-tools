@@ -34,7 +34,10 @@ enum Command {
         sub_command: app_auth::AuthSubcommand,
     },
     /// Cross publish posts
-    CrossPublish,
+    CrossPublish {
+        #[clap(long, action)]
+        dry_run: bool,
+    },
 }
 
 #[tokio::main]
@@ -48,7 +51,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     match cli.command {
         Command::AppAuth { sub_command } => app_auth::execute(sub_command, &config).await,
-        Command::CrossPublish => cross_publisher::execute(&config).await,
+        Command::CrossPublish { dry_run } => cross_publisher::execute(&config, dry_run).await,
     }
 }
 
