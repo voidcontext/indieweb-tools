@@ -54,27 +54,37 @@ async fn syndycate_channel<S: syndicated_post::Storage>(
                             target.network().to_string()
                         );
 
-                        if dry_run {
-                            Ok(())
-                        } else if let Some(extension) = post.get_iwt_extension() {
+                        if let Some(extension) = post.get_iwt_extension() {
                             if extension
                                 .target_networks
                                 .iter()
                                 .any(|tn| tn.network == target.network())
                             {
-                                target
-                                    .publish(post)
-                                    .map(|result| {
-                                        result.and_then(|syndicated| {
-                                            storage.store(syndicated).map_err(|err| {
-                                                Box::new(err) as Box<dyn std::error::Error>
+                                if dry_run {
+                                    log::info!(
+                                        "Publishing to {} skipped due to --dry-run",
+                                        target.network().to_string()
+                                    );
+                                    Ok(())
+                                } else {
+                                    log::info!(
+                                        "Publishing to {} skipped due to --dry-run",
+                                        target.network().to_string()
+                                    );
+                                    target
+                                        .publish(post)
+                                        .map(|result| {
+                                            result.and_then(|syndicated| {
+                                                storage.store(syndicated).map_err(|err| {
+                                                    Box::new(err) as Box<dyn std::error::Error>
+                                                })
                                             })
                                         })
-                                    })
-                                    .await
+                                        .await
+                                }
                             } else {
                                 log::info!(
-                                    "Skippin syndication to {}",
+                                    "Skipping  syndication to {}",
                                     target.network().to_string()
                                 );
                                 Ok(())
