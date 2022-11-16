@@ -51,33 +51,65 @@ impl Client for ReqwestClient {
 
 #[cfg(test)]
 pub mod stubs {
-    use std::{fmt::Display, ops::Deref, sync::Arc};
+    use std::{collections::HashMap, fmt::Display, ops::Deref, sync::Arc};
 
     use async_mutex::Mutex;
     use async_trait::async_trait;
     use reqwest::Url;
-    use rss::{Channel, GuidBuilder, Item};
+    use rss::{extension::ExtensionMap, Channel, GuidBuilder, Item};
+
+    use crate::{cross_publisher::rss_item_ext::stubs::create_iwt_extension_map, social};
 
     use super::Client;
 
-    #[derive(Default)]
     pub struct StubRssClient {
         pub urls: Arc<Mutex<Vec<String>>>,
+        items: HashMap<String, Vec<Item>>,
     }
 
-    pub fn default_items(url: &str) -> Vec<Item> {
-        (0..4)
-            .map(|i| Item {
-                title: Some(format!("This is pos #{} at {}", i, url)),
-                link: Some(format!("{}/post-{}", url, i)),
-                guid: Some(
-                    GuidBuilder::default()
-                        .value(format!("{}/post-{}", url, i))
-                        .build(),
-                ),
-                ..Default::default()
-            })
-            .collect()
+    impl StubRssClient {
+        pub fn new(items: &HashMap<String, Vec<Item>>) -> Self {
+            Self {
+                items: items.clone(),
+                urls: Default::default(),
+            }
+        }
+    }
+
+    pub fn gen_items(urls: &[&str]) -> HashMap<String, Vec<Item>> {
+        gen_items_with_extension(
+            urls,
+            4,
+            0,
+            create_iwt_extension_map(&[social::Network::Mastodon, social::Network::Twitter]),
+        )
+    }
+
+    pub fn gen_items_with_extension(
+        urls: &[&str],
+        count: usize,
+        offset: usize,
+        extensions: ExtensionMap,
+    ) -> HashMap<String, Vec<Item>> {
+        let mut result = HashMap::new();
+        for url in urls {
+            let mut items = Vec::new();
+            for i in (0 + offset)..(count + offset) {
+                items.push(Item {
+                    title: Some(format!("This is pos #{} at {}", i, url)),
+                    link: Some(format!("{}/post-{}", url, i)),
+                    guid: Some(
+                        GuidBuilder::default()
+                            .value(format!("{}/post-{}", url, i))
+                            .build(),
+                    ),
+                    extensions: extensions.clone(),
+                    ..Default::default()
+                })
+            }
+            result.insert(url.to_string(), items);
+        }
+        result
     }
 
     #[async_trait]
@@ -99,7 +131,7 @@ pub mod stubs {
                         Err(Box::new(RssClientError))
                     } else {
                         let channel = Channel {
-                            items: default_items(url),
+                            items: self.items.get(&url.to_string()).unwrap().clone(),
                             link: url.to_owned(),
                             ..Default::default()
                         };

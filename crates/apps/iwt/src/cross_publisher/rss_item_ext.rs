@@ -33,7 +33,7 @@ impl RssItemExt for Item {
             .get(&"iwt".to_string())
             .and_then(|iwt_root| iwt_root.get("extension").map(|extensions| &extensions[0]))
             .map(|iwt_extension| {
-                println!("iwt: {:?}", iwt_extension);
+                // println!("iwt: {:?}", iwt_extension);
                 let target_networks = get_children(iwt_extension, "targetNetwork")
                     .iter()
                     .map(|target_network| {
@@ -60,7 +60,7 @@ impl RssItemExt for Item {
 }
 
 #[cfg(test)]
-mod stubs {
+pub mod stubs {
     use std::collections::BTreeMap;
 
     use rss::extension::{Extension, ExtensionBuilder, ExtensionMap};
