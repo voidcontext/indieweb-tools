@@ -43,10 +43,10 @@ impl RssItemExt for Item {
                         .unwrap();
 
                         match target_network_name {
-                            "Twitter" => IwtRssTargetNetwork {
+                            "twitter" => IwtRssTargetNetwork {
                                 network: social::Network::Twitter,
                             },
-                            "Mastodon" => IwtRssTargetNetwork {
+                            "mastodon" => IwtRssTargetNetwork {
                                 network: social::Network::Mastodon,
                             },
                             _ => panic!("Unknown netowrk: {}", target_network_name),
@@ -60,53 +60,12 @@ impl RssItemExt for Item {
 }
 
 #[cfg(test)]
-mod test {
+mod stubs {
     use std::collections::BTreeMap;
 
-    use crate::{
-        cross_publisher::rss_item_ext::{IwtRssExtension, IwtRssTargetNetwork},
-        social,
-    };
-    use rss::{
-        extension::{Extension, ExtensionBuilder, ExtensionMap},
-        Item,
-    };
+    use rss::extension::{Extension, ExtensionBuilder, ExtensionMap};
 
-    use super::RssItemExt;
-
-    #[test]
-    fn test_get_iwt_extension_should_return_none_when_extension_is_not_available() {
-        let item = Item::default();
-
-        let extension = item.get_iwt_extension();
-
-        assert_eq!(extension, None);
-    }
-
-    #[test]
-    fn test_get_iwt_extension_should_return_the_extension_with_zero_target_networks_if_no_children()
-    {
-        let iwt_extension = ExtensionBuilder::default().name("iwt:extension").build();
-
-        let mut iwt_root = BTreeMap::new();
-        iwt_root.insert("extension".to_string(), vec![iwt_extension]);
-
-        let mut extensions = BTreeMap::new();
-        extensions.insert("iwt".to_string(), iwt_root);
-
-        let item = Item {
-            extensions,
-            ..Default::default()
-        };
-        let extension = item.get_iwt_extension();
-
-        assert_eq!(
-            extension,
-            Some(IwtRssExtension {
-                target_networks: vec![]
-            })
-        );
-    }
+    use crate::social;
 
     fn create_extension(name: &str, value: &str) -> Extension {
         ExtensionBuilder::default()
@@ -128,40 +87,87 @@ mod test {
             .build()
     }
 
-    fn create_iwt_extension_map(iwt_extension: Extension) -> ExtensionMap {
+    fn create_target_network_name_extension(network: &social::Network) -> Extension {
+        create_extension("iwt:targetNetworkName", &network.to_string())
+    }
+
+    fn create_target_network_extension(network: &social::Network) -> Extension {
+        create_extension_with_children(
+            "iwt:targetNetwork",
+            "targetNetworkName",
+            vec![create_target_network_name_extension(network)],
+        )
+    }
+
+    fn create_iwt_extension(target_networks: &[social::Network]) -> Extension {
+        create_extension_with_children(
+            "iwt:extension",
+            "targetNetwork",
+            target_networks
+                .iter()
+                .map(create_target_network_extension)
+                .collect(),
+        )
+    }
+
+    pub fn create_iwt_extension_map(target_networks: &[social::Network]) -> ExtensionMap {
         let mut iwt_root = BTreeMap::new();
-        iwt_root.insert("extension".to_string(), vec![iwt_extension]);
+        iwt_root.insert(
+            "extension".to_string(),
+            vec![create_iwt_extension(target_networks)],
+        );
 
         let mut extensions = BTreeMap::new();
         extensions.insert("iwt".to_string(), iwt_root);
 
         extensions
     }
+}
+
+#[cfg(test)]
+mod test {
+    use crate::{
+        cross_publisher::rss_item_ext::{IwtRssExtension, IwtRssTargetNetwork},
+        social,
+    };
+    use rss::Item;
+
+    use super::stubs::*;
+    use super::RssItemExt;
+
+    #[test]
+    fn test_get_iwt_extension_should_return_none_when_extension_is_not_available() {
+        let item = Item::default();
+
+        let extension = item.get_iwt_extension();
+
+        assert_eq!(extension, None);
+    }
+
+    #[test]
+    fn test_get_iwt_extension_should_return_the_extension_with_zero_target_networks_if_no_children()
+    {
+        let item = Item {
+            extensions: create_iwt_extension_map(&[]),
+            ..Default::default()
+        };
+        let extension = item.get_iwt_extension();
+
+        assert_eq!(
+            extension,
+            Some(IwtRssExtension {
+                target_networks: vec![]
+            })
+        );
+    }
 
     #[test]
     fn test_get_iwt_extension_should_return_the_extension_with_target_networks() {
-        let mastodon_target_network_name = create_extension("iwt:targetNetworkName", "Mastodon");
-        let twitter_target_network_name = create_extension("iwt:targetNetworkName", "Twitter");
-
-        let iwt_extension = create_extension_with_children(
-            "iwt:extension",
-            "targetNetwork",
-            vec![
-                create_extension_with_children(
-                    "iwt:targetNetwork",
-                    "targetNetworkName",
-                    vec![mastodon_target_network_name],
-                ),
-                create_extension_with_children(
-                    "iwt:targetNetwork",
-                    "targetNetworkName",
-                    vec![twitter_target_network_name],
-                ),
-            ],
-        );
-
         let item = Item {
-            extensions: create_iwt_extension_map(iwt_extension),
+            extensions: create_iwt_extension_map(&[
+                social::Network::Mastodon,
+                social::Network::Twitter,
+            ]),
             ..Default::default()
         };
         let extension = item.get_iwt_extension();
