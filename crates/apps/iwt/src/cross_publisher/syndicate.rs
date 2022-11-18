@@ -38,7 +38,7 @@ async fn syndycate_channel<S: syndicated_post::Storage>(
     run_and_collect(targets.iter(), |target| {
         run_and_collect(channel.items.iter(), |post| {
             log::info!(
-                "Syndicating post found at {} to {}",
+                "{} |> Syndicating post to {}",
                 post.link().unwrap(),
                 target.network().to_string()
             );
@@ -50,7 +50,8 @@ async fn syndycate_channel<S: syndicated_post::Storage>(
                 match stored {
                     Ok(None) => {
                         log::info!(
-                            " -> Post not found in DB, syndycating to {}",
+                            "{} |> Post not found in DB, syndycating to {}",
+                            post.link().unwrap(),
                             target.network().to_string()
                         );
 
@@ -62,16 +63,18 @@ async fn syndycate_channel<S: syndicated_post::Storage>(
                             {
                                 if dry_run {
                                     log::info!(
-                                        "Publishing to {} skipped due to --dry-run",
+                                        "{} |> Publishing to {} is skipped due to --dry-run",
+                                        post.link().unwrap(),
                                         target.network().to_string()
                                     );
                                     Ok(())
                                 } else {
                                     log::info!(
-                                        "Publishing to {} skipped due to --dry-run",
+                                        "{} |> Publishing to {}",
+                                        post.link().unwrap(),
                                         target.network().to_string()
                                     );
-                                    target
+                                    let result = target
                                         .publish(post)
                                         .map(|result| {
                                             result.and_then(|syndicated| {
@@ -80,11 +83,19 @@ async fn syndycate_channel<S: syndicated_post::Storage>(
                                                 })
                                             })
                                         })
-                                        .await
+                                        .await;
+                                    log::info!(
+                                        "{} |> Published to {}",
+                                        post.link().unwrap(),
+                                        target.network().to_string()
+                                    );
+
+                                    result
                                 }
                             } else {
                                 log::info!(
-                                    "Skipping  syndication to {}",
+                                    "{} |> Not configured to be syndicated to {}",
+                                    post.link().unwrap(),
                                     target.network().to_string()
                                 );
                                 Ok(())
@@ -98,7 +109,8 @@ async fn syndycate_channel<S: syndicated_post::Storage>(
                     }
                     Ok(Some(_)) => {
                         log::info!(
-                            " -> Post has been already syndicated to {}",
+                            "{} |> Has been already syndicated to {}",
+                            post.link().unwrap(),
                             target.network().to_string()
                         );
                         Ok(())
