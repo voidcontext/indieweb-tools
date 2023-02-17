@@ -28,8 +28,12 @@ impl Client for ReqwestClient {
                 let str = description
                     .replace("<li>", "<li>- ")
                     .replace("<code>", "`")
-                    .replace("</code>", "`");
-                log::debug!("original desc: {}", str);
+                    .replace("</code>", "`")
+                    .replace("\n", " ")
+                    .replace("</p> ", "\n\n");
+
+                log::debug!("original desc:\n{}\n", str);
+
                 let fragment = Html::parse_document(&format!("<html>{}</html>", &str));
                 let cleaned = fragment
                     .select(&Selector::parse("html").unwrap())
@@ -38,7 +42,9 @@ impl Client for ReqwestClient {
                     .text()
                     .collect::<Vec<_>>()
                     .join("");
-                log::debug!("cleaned desc: {}", cleaned);
+
+                log::debug!("cleaned desc:\n{}\n", cleaned);
+                
                 item.set_description(cleaned);
             }
         }
