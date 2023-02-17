@@ -25,7 +25,10 @@ impl Client for ReqwestClient {
 
         for item in channel.items_mut() {
             if let Some(description) = item.description.clone() {
-                let str = description.replace("<li>", "<li>- ");
+                let str = description
+                    .replace("<li>", "<li>- ")
+                    .replace("<code>", "`")
+                    .replace("</code>", "`");
                 log::debug!("original desc: {}", str);
                 let fragment = Html::parse_document(&format!("<html>{}</html>", &str));
                 let cleaned = fragment
