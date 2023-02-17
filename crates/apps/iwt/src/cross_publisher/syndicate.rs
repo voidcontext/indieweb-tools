@@ -75,7 +75,7 @@ async fn syndycate_channel<S: syndicated_post::Storage>(
                                         target.network().to_string()
                                     );
                                     let result = target
-                                        .publish(post)
+                                        .publish(post, &extension)
                                         .map(|result| {
                                             result.and_then(|syndicated| {
                                                 storage.store(syndicated).map_err(|err| {

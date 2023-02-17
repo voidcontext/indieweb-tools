@@ -2,13 +2,14 @@ use crate::social::Network;
 use async_trait::async_trait;
 use rss::Item;
 
-use super::syndicated_post::SyndicatedPost;
+use super::{syndicated_post::SyndicatedPost, rss_item_ext::IwtRssExtension};
 
 #[async_trait(?Send)]
 pub trait Target {
     async fn publish<'a>(
         &self,
         post: &Item,
+        extension: &IwtRssExtension
     ) -> Result<SyndicatedPost, Box<dyn std::error::Error + 'a>>;
 
     fn network(&self) -> Network;
@@ -22,6 +23,7 @@ pub mod stubs {
     use async_trait::async_trait;
     use rss::Item;
 
+    use crate::cross_publisher::rss_item_ext::IwtRssExtension;
     use crate::cross_publisher::syndicated_post::SyndicatedPost;
     use crate::social::Network;
 
@@ -46,6 +48,7 @@ pub mod stubs {
         async fn publish<'a>(
             &self,
             post: &Item,
+            extemsion: &IwtRssExtension
         ) -> Result<SyndicatedPost, Box<dyn std::error::Error + 'a>> {
             let mut calls = self.calls.lock().await;
             let id = calls.len();
@@ -86,6 +89,7 @@ pub mod stubs {
         async fn publish<'a>(
             &self,
             _post: &Item,
+            _extension: &IwtRssExtension
         ) -> Result<SyndicatedPost, Box<dyn std::error::Error + 'a>> {
             Err(Box::new(TargetError))
         }

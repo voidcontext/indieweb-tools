@@ -1,5 +1,6 @@
 use std::rc::Rc;
 
+use super::rss_item_ext::IwtRssExtension;
 use super::syndicated_post::SyndicatedPost;
 use super::target::Target;
 use crate::commons::{text, url_shortener};
@@ -35,6 +36,7 @@ impl<USClient: url_shortener::Client> Mastodon<USClient> {
 #[derive(serde::Serialize)]
 struct UpdateStatusRequest {
     status: String,
+    content_warning: Option<String>
 }
 
 #[derive(serde::Deserialize)]
@@ -47,6 +49,7 @@ impl<WHClient: url_shortener::Client> Target for Mastodon<WHClient> {
     async fn publish<'a>(
         &self,
         post: &Item,
+        extension: &IwtRssExtension
     ) -> Result<SyndicatedPost, Box<dyn std::error::Error + 'a>> {
         log::debug!("processing post: {:?}", post);
 
@@ -65,7 +68,7 @@ impl<WHClient: url_shortener::Client> Target for Mastodon<WHClient> {
             // TODO: make mastodon instance configurable
             .post(format!("{}/api/v1/statuses", self.base_uri))
             .bearer_auth(self.access_token.secret().clone())
-            .json(&UpdateStatusRequest { status })
+            .json(&UpdateStatusRequest { status, content_warning: extension.content_warning.clone()  })
             .send()
             .map_err(|err| Box::new(err) as Box<dyn std::error::Error>)
             .and_then(|response| async {

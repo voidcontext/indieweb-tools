@@ -10,6 +10,7 @@ use oauth2::{basic::BasicClient, AuthUrl, ClientId, TokenUrl};
 use reqwest::Client;
 use rss::Item;
 
+use super::rss_item_ext::IwtRssExtension;
 use super::syndicated_post::SyndicatedPost;
 use super::target::Target;
 use crate::commons::auth::oauth::AuthedClient;
@@ -160,6 +161,7 @@ impl<DB: TokenDB, WHClient: url_shortener::Client> Target for Twitter<DB, WHClie
     async fn publish<'a>(
         &self,
         post: &Item,
+        _extension: &IwtRssExtension
     ) -> Result<SyndicatedPost, Box<dyn std::error::Error + 'a>> {
         log::debug!("processing post: {:?}", post);
 

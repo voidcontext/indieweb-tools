@@ -7,6 +7,8 @@ use crate::social;
 pub struct IwtRssExtension {
     /// The target networks where Item should be syndicated to
     pub target_networks: Vec<IwtRssTargetNetwork>,
+    /// Content Warning, this is only used by Mastodon
+    pub content_warning: Option<String>,
 }
 
 #[derive(Debug, PartialEq)]
@@ -25,6 +27,18 @@ fn get_children<'a>(ext: &'a Extension, key: &str) -> Vec<&'a Extension> {
         .flat_map(|children| children.iter())
         .collect::<Vec<_>>()
 }
+
+fn get_key<'a>(ext: &'a Extension, key: &str) -> Option<&'a Extension> {
+    ext.children()
+        .get(key)
+        .and_then(|children| children.first())
+}
+
+fn get_value<'a>(ext: &'a Extension, key: &str) -> Option<&'a str> {
+    get_key(ext, key)
+        .and_then(|item| item.value())
+}
+
 
 impl RssItemExt for Item {
     fn get_iwt_extension(&self) -> Option<IwtRssExtension> {
@@ -54,7 +68,9 @@ impl RssItemExt for Item {
                     })
                     .collect::<Vec<_>>();
 
-                IwtRssExtension { target_networks }
+                let content_warning = get_value(iwt_extension, "contentWarning").map(|s| s.to_owned());
+
+                IwtRssExtension { target_networks, content_warning }
             })
     }
 }
@@ -110,7 +126,17 @@ pub mod stubs {
         )
     }
 
-    pub fn create_iwt_extension_map(target_networks: &[social::Network]) -> ExtensionMap {
+    fn create_iwt_extension(target_networks: &[social::Network]) -> Extension {
+        create_extension_with_children(
+            "iwt:extension",
+            "targetNetwork",
+            target_networks
+                .iter()
+                .map(create_target_network_extension)
+                .collect(),
+        )
+    }
+    pub fn create_iwt_extension_map(target_networks: &[social::Network], content_warning: Option<String>) -> ExtensionMap {
         let mut iwt_root = BTreeMap::new();
         iwt_root.insert(
             "extension".to_string(),
