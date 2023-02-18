@@ -44,7 +44,7 @@ impl Client for ReqwestClient {
                     .join("");
 
                 log::debug!("cleaned desc:\n{}\n", cleaned);
-                
+
                 item.set_description(cleaned);
             }
         }
