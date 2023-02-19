@@ -90,7 +90,7 @@ pub mod stubs {
             urls,
             4,
             0,
-            create_iwt_extension_map(&[social::Network::Mastodon, social::Network::Twitter]),
+            create_iwt_extension_map(&[social::Network::Mastodon, social::Network::Twitter], None),
         )
     }
 

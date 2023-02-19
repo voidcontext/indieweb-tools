@@ -7,6 +7,8 @@ use crate::social;
 pub struct IwtRssExtension {
     /// The target networks where Item should be syndicated to
     pub target_networks: Vec<IwtRssTargetNetwork>,
+    /// Content Warning, this is only used by Mastodon
+    pub content_warning: Option<String>,
 }
 
 #[derive(Debug, PartialEq)]
@@ -24,6 +26,16 @@ fn get_children<'a>(ext: &'a Extension, key: &str) -> Vec<&'a Extension> {
         .iter()
         .flat_map(|children| children.iter())
         .collect::<Vec<_>>()
+}
+
+fn get_key<'a>(ext: &'a Extension, key: &str) -> Option<&'a Extension> {
+    ext.children()
+        .get(key)
+        .and_then(|children| children.first())
+}
+
+fn get_value<'a>(ext: &'a Extension, key: &str) -> Option<&'a str> {
+    get_key(ext, key).and_then(|item| item.value())
 }
 
 impl RssItemExt for Item {
@@ -54,7 +66,13 @@ impl RssItemExt for Item {
                     })
                     .collect::<Vec<_>>();
 
-                IwtRssExtension { target_networks }
+                let content_warning =
+                    get_value(iwt_extension, "contentWarning").map(|s| s.to_owned());
+
+                IwtRssExtension {
+                    target_networks,
+                    content_warning,
+                }
             })
     }
 }
@@ -69,20 +87,23 @@ pub mod stubs {
 
     fn create_extension(name: &str, value: &str) -> Extension {
         ExtensionBuilder::default()
-            .name(name)
+            .name(name.to_string())
             .value(Some(value.to_string()))
             .build()
     }
 
     fn create_extension_with_children(
         name: &str,
-        key: &str,
-        children: Vec<Extension>,
+        children: Vec<(&str, Vec<Extension>)>,
     ) -> Extension {
-        let mut children_map = BTreeMap::new();
-        children_map.insert(key.to_string(), children);
+        let mut children_map: BTreeMap<String, Vec<Extension>> = BTreeMap::new();
+
+        for (key, exts) in children {
+            children_map.insert(key.to_string(), exts);
+        }
+
         ExtensionBuilder::default()
-            .name(name)
+            .name(name.to_string())
             .children(children_map)
             .build()
     }
@@ -94,27 +115,42 @@ pub mod stubs {
     fn create_target_network_extension(network: &social::Network) -> Extension {
         create_extension_with_children(
             "iwt:targetNetwork",
-            "targetNetworkName",
-            vec![create_target_network_name_extension(network)],
+            vec![(
+                "targetNetworkName",
+                vec![create_target_network_name_extension(network)],
+            )],
         )
     }
 
-    fn create_iwt_extension(target_networks: &[social::Network]) -> Extension {
-        create_extension_with_children(
-            "iwt:extension",
+    fn create_iwt_extension(
+        target_networks: &[social::Network],
+        content_warning: Option<String>,
+    ) -> Extension {
+        let mut children = vec![(
             "targetNetwork",
             target_networks
                 .iter()
                 .map(create_target_network_extension)
                 .collect(),
-        )
-    }
+        )];
 
-    pub fn create_iwt_extension_map(target_networks: &[social::Network]) -> ExtensionMap {
+        if let Some(cw) = content_warning {
+            children.push((
+                "contentWarning",
+                vec![create_extension("iwt:contentWarning", cw.as_str())],
+            ))
+        }
+
+        create_extension_with_children("iwt:extension", children)
+    }
+    pub fn create_iwt_extension_map(
+        target_networks: &[social::Network],
+        content_warning: Option<String>,
+    ) -> ExtensionMap {
         let mut iwt_root = BTreeMap::new();
         iwt_root.insert(
             "extension".to_string(),
-            vec![create_iwt_extension(target_networks)],
+            vec![create_iwt_extension(target_networks, content_warning)],
         );
 
         let mut extensions = BTreeMap::new();
@@ -148,7 +184,7 @@ mod test {
     fn test_get_iwt_extension_should_return_the_extension_with_zero_target_networks_if_no_children()
     {
         let item = Item {
-            extensions: create_iwt_extension_map(&[]),
+            extensions: create_iwt_extension_map(&[], None),
             ..Default::default()
         };
         let extension = item.get_iwt_extension();
@@ -156,7 +192,8 @@ mod test {
         assert_eq!(
             extension,
             Some(IwtRssExtension {
-                target_networks: vec![]
+                target_networks: vec![],
+                content_warning: None
             })
         );
     }
@@ -164,10 +201,10 @@ mod test {
     #[test]
     fn test_get_iwt_extension_should_return_the_extension_with_target_networks() {
         let item = Item {
-            extensions: create_iwt_extension_map(&[
-                social::Network::Mastodon,
-                social::Network::Twitter,
-            ]),
+            extensions: create_iwt_extension_map(
+                &[social::Network::Mastodon, social::Network::Twitter],
+                None,
+            ),
             ..Default::default()
         };
         let extension = item.get_iwt_extension();
@@ -182,7 +219,29 @@ mod test {
                     IwtRssTargetNetwork {
                         network: social::Network::Twitter
                     },
-                ]
+                ],
+                content_warning: None
+            })
+        );
+    }
+    #[test]
+    fn test_get_iwt_extension_should_return_the_extension_with_content_warning() {
+        let item = Item {
+            extensions: create_iwt_extension_map(
+                &[social::Network::Mastodon],
+                Some("This is a content_warning".to_string()),
+            ),
+            ..Default::default()
+        };
+        let extension = item.get_iwt_extension();
+
+        assert_eq!(
+            extension,
+            Some(IwtRssExtension {
+                target_networks: vec![IwtRssTargetNetwork {
+                    network: social::Network::Mastodon
+                },],
+                content_warning: Some("This is a content_warning".to_string())
             })
         );
     }
