@@ -33,5 +33,7 @@ urlencoding = "2.1.2"
 
 scraper = "0.13.0"
 
+regex = "1.7.1"
+
 [dev-dependencies]
 wiremock = "0.5"

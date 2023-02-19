@@ -1,4 +1,5 @@
 use async_trait::async_trait;
+use regex::Regex;
 use rss::Channel;
 use scraper::{Html, Selector};
 
@@ -25,7 +26,11 @@ impl Client for ReqwestClient {
 
         for item in channel.items_mut() {
             if let Some(description) = item.description.clone() {
-                let str = description
+                let re = Regex::new(r"<h[1-6] ").unwrap();
+
+                let summary: String = re.split(&description).next().unwrap().to_string();
+
+                let str = summary
                     .replace("<li>", "<li>- ")
                     .replace("<code>", "`")
                     .replace("</code>", "`")
