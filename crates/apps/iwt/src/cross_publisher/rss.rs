@@ -63,6 +63,8 @@ impl Client for ReqwestClient {
     }
 }
 
+pub mod tests {}
+
 #[cfg(test)]
 pub mod stubs {
     use std::{collections::HashMap, fmt::Display, ops::Deref, sync::Arc};

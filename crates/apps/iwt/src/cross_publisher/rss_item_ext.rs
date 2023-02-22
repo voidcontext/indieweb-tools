@@ -48,14 +48,11 @@ impl RssItemExt for Item {
             .and_then(|iwt_root| iwt_root.get("extension").map(|extensions| &extensions[0]))
             .map(|iwt_extension| {
                 // println!("iwt: {:?}", iwt_extension);
-                let target_networks = get_children(iwt_extension, "targetNetwork")
+                let target_networks = get_key(iwt_extension, "targetNetworks")
                     .iter()
+                    .flat_map(|target_networks| get_children(target_networks, "targetNetwork"))
                     .map(|target_network| {
-                        let target_network_name = get_children(target_network, "targetNetworkName")
-                            [0]
-                        .value()
-                        .unwrap();
-
+                        let target_network_name = target_network.value().unwrap();
                         match target_network_name {
                             "twitter" => IwtRssTargetNetwork {
                                 network: social::Network::Twitter,
@@ -68,14 +65,10 @@ impl RssItemExt for Item {
                     })
                     .collect::<Vec<_>>();
 
-                let tags = get_children(iwt_extension, "tag")
+                let tags = get_children(iwt_extension, "tags")
                     .iter()
-                    .map(|target_network| {
-                        get_children(target_network, "tagName")[0]
-                            .value()
-                            .unwrap()
-                            .to_string()
-                    })
+                    .flat_map(|tags| get_children(tags, "tag"))
+                    .map(|tag| tag.value().unwrap().to_string())
                     .collect();
 
                 let content_warning =
@@ -121,20 +114,6 @@ pub mod stubs {
             .build()
     }
 
-    fn create_target_network_name_extension(network: &social::Network) -> Extension {
-        create_extension("iwt:targetNetworkName", &network.to_string())
-    }
-
-    fn create_target_network_extension(network: &social::Network) -> Extension {
-        create_extension_with_children(
-            "iwt:targetNetwork",
-            vec![(
-                "targetNetworkName",
-                vec![create_target_network_name_extension(network)],
-            )],
-        )
-    }
-
     fn create_iwt_extension(
         target_networks: &[social::Network],
         content_warning: Option<String>,
@@ -142,22 +121,31 @@ pub mod stubs {
     ) -> Extension {
         let mut children = vec![
             (
-                "targetNetwork",
-                target_networks
-                    .iter()
-                    .map(create_target_network_extension)
-                    .collect(),
+                "targetNetworks",
+                vec![create_extension_with_children(
+                    "iwt:targetNetworks",
+                    vec![(
+                        "targetNetwork",
+                        target_networks
+                            .iter()
+                            .map(|target_network| {
+                                create_extension("iwt:targetNetwork", &target_network.to_string())
+                            })
+                            .collect(),
+                    )],
+                )],
             ),
             (
-                "tag",
-                tags.iter()
-                    .map(|tag| {
-                        create_extension_with_children(
-                            "iwt:tag",
-                            vec![("tagName", vec![create_extension("iwt:tagName", tag)])],
-                        )
-                    })
-                    .collect(),
+                "tags",
+                vec![create_extension_with_children(
+                    "iwt:tags",
+                    vec![(
+                        "tag",
+                        tags.iter()
+                            .map(|tag| create_extension("iwt:tag", tag))
+                            .collect(),
+                    )],
+                )],
             ),
         ];
 
