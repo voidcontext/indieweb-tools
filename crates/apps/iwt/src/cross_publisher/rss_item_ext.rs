@@ -9,6 +9,8 @@ pub struct IwtRssExtension {
     pub target_networks: Vec<IwtRssTargetNetwork>,
     /// Content Warning, this is only used by Mastodon
     pub content_warning: Option<String>,
+    /// Tags of the item
+    pub tags: Vec<String>,
 }
 
 #[derive(Debug, PartialEq)]
@@ -66,12 +68,23 @@ impl RssItemExt for Item {
                     })
                     .collect::<Vec<_>>();
 
+                let tags = get_children(iwt_extension, "tag")
+                    .iter()
+                    .map(|target_network| {
+                        get_children(target_network, "tagName")[0]
+                            .value()
+                            .unwrap()
+                            .to_string()
+                    })
+                    .collect();
+
                 let content_warning =
                     get_value(iwt_extension, "contentWarning").map(|s| s.to_owned());
 
                 IwtRssExtension {
                     target_networks,
                     content_warning,
+                    tags,
                 }
             })
     }
@@ -125,14 +138,28 @@ pub mod stubs {
     fn create_iwt_extension(
         target_networks: &[social::Network],
         content_warning: Option<String>,
+        tags: &[&str],
     ) -> Extension {
-        let mut children = vec![(
-            "targetNetwork",
-            target_networks
-                .iter()
-                .map(create_target_network_extension)
-                .collect(),
-        )];
+        let mut children = vec![
+            (
+                "targetNetwork",
+                target_networks
+                    .iter()
+                    .map(create_target_network_extension)
+                    .collect(),
+            ),
+            (
+                "tag",
+                tags.iter()
+                    .map(|tag| {
+                        create_extension_with_children(
+                            "iwt:tag",
+                            vec![("tagName", vec![create_extension("iwt:tagName", tag)])],
+                        )
+                    })
+                    .collect(),
+            ),
+        ];
 
         if let Some(cw) = content_warning {
             children.push((
@@ -146,11 +173,12 @@ pub mod stubs {
     pub fn create_iwt_extension_map(
         target_networks: &[social::Network],
         content_warning: Option<String>,
+        tags: &[&str],
     ) -> ExtensionMap {
         let mut iwt_root = BTreeMap::new();
         iwt_root.insert(
             "extension".to_string(),
-            vec![create_iwt_extension(target_networks, content_warning)],
+            vec![create_iwt_extension(target_networks, content_warning, tags)],
         );
 
         let mut extensions = BTreeMap::new();
@@ -184,7 +212,7 @@ mod test {
     fn test_get_iwt_extension_should_return_the_extension_with_zero_target_networks_if_no_children()
     {
         let item = Item {
-            extensions: create_iwt_extension_map(&[], None),
+            extensions: create_iwt_extension_map(&[], None, &Vec::new()),
             ..Default::default()
         };
         let extension = item.get_iwt_extension();
@@ -193,7 +221,8 @@ mod test {
             extension,
             Some(IwtRssExtension {
                 target_networks: vec![],
-                content_warning: None
+                content_warning: None,
+                tags: Vec::new()
             })
         );
     }
@@ -204,6 +233,7 @@ mod test {
             extensions: create_iwt_extension_map(
                 &[social::Network::Mastodon, social::Network::Twitter],
                 None,
+                &Vec::new(),
             ),
             ..Default::default()
         };
@@ -220,7 +250,8 @@ mod test {
                         network: social::Network::Twitter
                     },
                 ],
-                content_warning: None
+                content_warning: None,
+                tags: Vec::new()
             })
         );
     }
@@ -230,6 +261,7 @@ mod test {
             extensions: create_iwt_extension_map(
                 &[social::Network::Mastodon],
                 Some("This is a content_warning".to_string()),
+                &Vec::new(),
             ),
             ..Default::default()
         };
@@ -241,7 +273,32 @@ mod test {
                 target_networks: vec![IwtRssTargetNetwork {
                     network: social::Network::Mastodon
                 },],
-                content_warning: Some("This is a content_warning".to_string())
+                content_warning: Some("This is a content_warning".to_string()),
+                tags: Vec::new()
+            })
+        );
+    }
+
+    #[test]
+    fn test_get_iwt_extension_should_return_the_extension_with_tags() {
+        let item = Item {
+            extensions: create_iwt_extension_map(
+                &[social::Network::Mastodon],
+                Some("This is a content_warning".to_string()),
+                &vec!["tag-1", "tag-2"],
+            ),
+            ..Default::default()
+        };
+        let extension = item.get_iwt_extension();
+
+        assert_eq!(
+            extension,
+            Some(IwtRssExtension {
+                target_networks: vec![IwtRssTargetNetwork {
+                    network: social::Network::Mastodon
+                },],
+                content_warning: Some("This is a content_warning".to_string()),
+                tags: vec!["tag-1".to_string(), "tag-2".to_string()]
             })
         );
     }
