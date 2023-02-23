@@ -77,6 +77,7 @@ impl<DB: TokenDB, USClient: url_shortener::Client> Twitter<DB, USClient> {
         &self,
         post: &Item,
         permashort_citation: &PermashortCitation,
+        tags: &[String],
     ) -> Result<SyndicatedPost, Box<dyn std::error::Error + 'a>> {
         let mut length = 280;
         let mut success_or_gave_up = false;
@@ -89,6 +90,7 @@ impl<DB: TokenDB, USClient: url_shortener::Client> Twitter<DB, USClient> {
                 post.description().unwrap(),
                 length,
                 &permashort_citation,
+                tags,
             );
 
             let request = self
@@ -161,7 +163,7 @@ impl<DB: TokenDB, WHClient: url_shortener::Client> Target for Twitter<DB, WHClie
     async fn publish<'a>(
         &self,
         post: &Item,
-        _extension: &IwtRssExtension,
+        extension: &IwtRssExtension,
     ) -> Result<SyndicatedPost, Box<dyn std::error::Error + 'a>> {
         log::debug!("processing post: {:?}", post);
 
@@ -170,7 +172,8 @@ impl<DB: TokenDB, WHClient: url_shortener::Client> Target for Twitter<DB, WHClie
             .put_uri(post.link.as_ref().unwrap())
             .await?;
 
-        self.try_publish(&post, &permashort_citation).await
+        self.try_publish(&post, &permashort_citation, &extension.tags)
+            .await
     }
 
     fn network(&self) -> Network {

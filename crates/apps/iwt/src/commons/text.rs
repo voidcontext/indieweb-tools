@@ -1,4 +1,5 @@
 use super::permashort_link::PermashortCitation;
+use convert_case::{Case, Casing};
 
 #[must_use]
 pub fn shorten(text: &str, limit: usize) -> &str {
@@ -18,21 +19,33 @@ pub fn shorten_with_permashort_citation(
     text: &str,
     limit: usize,
     permashort_citation: &PermashortCitation,
+    tags: &[String],
 ) -> String {
-    let pc = format!(" ({})", permashort_citation.to_string());
-    let shortened = shorten(text, limit - pc.len());
+    let hash_tags = tags
+        .iter()
+        .map(|tag| String::from("#") + &tag.to_case(Case::Pascal))
+        .collect::<Vec<_>>()
+        .join(" ");
+
+    let suffix = format!("\n{} ({})", hash_tags, permashort_citation.to_string());
+    let shortened = shorten(text, limit - suffix.len());
 
     if shortened == text {
         let mut appended = text.to_owned();
-        appended.push_str(&pc);
+        appended.push_str(&suffix);
         appended
     } else {
         let shortened = shorten(
             text,
-            limit - 23 - 4, /* Link + space + ellipsis + quuotes*/
+            limit - 23 - 4 - hash_tags.len() - 2, /* Link + space + ellipsis + quuotes + hastags + space around hash_tags*/
         );
 
-        format!("\"{}\"… {}", shortened, permashort_citation.to_uri())
+        format!(
+            "\"{}…\"\n{} {}",
+            shortened,
+            hash_tags,
+            permashort_citation.to_uri()
+        )
     }
 }
 
@@ -42,7 +55,9 @@ fn words(input: &str) -> Vec<&str> {
 
 #[cfg(test)]
 mod test {
-    use super::shorten;
+    use crate::commons::permashort_link::PermashortCitation;
+
+    use super::{shorten, shorten_with_permashort_citation};
 
     #[test]
     fn test_short_returns_same_if_short() {
@@ -72,5 +87,43 @@ mod test {
     fn test_shorten_returns_shortened_sentence_limit_with_ellipsis_longer() {
         let text = "This is some text. Looooong word.";
         assert_eq!(shorten(text, 23), "This is some text.")
+    }
+
+    #[test]
+    fn test_shorten_with_permashort_citation_should_add_hashtags() {
+        let short_text = "This is some text.";
+        let permashort_citation = PermashortCitation::new(
+            "http".to_string(),
+            "localhost".to_string(),
+            "asdf".to_string(),
+        );
+        assert_eq!(
+            shorten_with_permashort_citation(
+                short_text,
+                100,
+                &permashort_citation,
+                &["some-tag".to_string()]
+            ),
+            short_text.to_string() + "\n#SomeTag (localhost asdf)"
+        )
+    }
+
+    #[test]
+    fn test_shorten_with_permashort_citation_should_add_hashtags_when_text_too_long() {
+        let short_text = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.";
+        let permashort_citation = PermashortCitation::new(
+            "http".to_string(),
+            "localhost".to_string(),
+            "asdf".to_string(),
+        );
+        assert_eq!(
+            shorten_with_permashort_citation(
+                short_text,
+                60,
+                &permashort_citation,
+                &["tag".to_string()]
+            ),
+            "\"Lorem ipsum dolor sit…\"\n#Tag http://localhost/asdf"
+        )
     }
 }
