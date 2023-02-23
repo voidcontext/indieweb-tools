@@ -1,5 +1,7 @@
 use super::permashort_link::PermashortCitation;
 use convert_case::{Case, Casing};
+use regex::Regex;
+use scraper::{Html, Selector};
 
 #[must_use]
 pub fn shorten(text: &str, limit: usize) -> &str {
@@ -27,16 +29,23 @@ pub fn shorten_with_permashort_citation(
         .collect::<Vec<_>>()
         .join(" ");
 
-    let suffix = format!("\n{} ({})", hash_tags, permashort_citation.to_string());
-    let shortened = shorten(text, limit - suffix.len());
+    let (cleaned, short) = clean_description(text);
 
-    if shortened == text {
-        let mut appended = text.to_owned();
+    let suffix = if short {
+        format!("\n{} {}", hash_tags, permashort_citation.to_uri())
+    } else {
+        format!("\n{} ({})", hash_tags, permashort_citation.to_string())
+    };
+
+    let shortened = shorten(&cleaned, limit - suffix.len());
+
+    if shortened == cleaned {
+        let mut appended = cleaned;
         appended.push_str(&suffix);
         appended
     } else {
         let shortened = shorten(
-            text,
+            &cleaned,
             limit - 23 - 4 - hash_tags.len() - 2, /* Link + space + ellipsis + quuotes + hastags + space around hash_tags*/
         );
 
@@ -51,6 +60,36 @@ pub fn shorten_with_permashort_citation(
 
 fn words(input: &str) -> Vec<&str> {
     input.split(' ').collect()
+}
+
+pub fn clean_description(description: &str) -> (String, bool) {
+    let re = Regex::new(r"<h[1-6] ").unwrap();
+
+    let summary: String = re.split(&description).next().unwrap().to_string();
+
+    let shortened = summary != description;
+
+    let str = summary
+        .replace("<li>", "<li>- ")
+        .replace("<code>", "`")
+        .replace("</code>", "`")
+        .replace("\n", " ")
+        .replace("</p> ", "\n\n");
+
+    log::debug!("original desc:\n{}\n", str);
+
+    let fragment = Html::parse_document(&format!("<html>{}</html>", &str));
+    let cleaned = fragment
+        .select(&Selector::parse("html").unwrap())
+        .next()
+        .unwrap()
+        .text()
+        .collect::<Vec<_>>()
+        .join("");
+
+    log::debug!("cleaned desc:\n{}\n", cleaned);
+
+    (cleaned, shortened)
 }
 
 #[cfg(test)]

@@ -1,7 +1,5 @@
 use async_trait::async_trait;
-use regex::Regex;
 use rss::Channel;
-use scraper::{Html, Selector};
 
 pub struct ReqwestClient;
 
@@ -22,37 +20,7 @@ impl Client for ReqwestClient {
 
         log::debug!("Response received from url: {}", url);
 
-        let mut channel = Channel::read_from(&feed[..])?;
-
-        for item in channel.items_mut() {
-            if let Some(description) = item.description.clone() {
-                let re = Regex::new(r"<h[1-6] ").unwrap();
-
-                let summary: String = re.split(&description).next().unwrap().to_string();
-
-                let str = summary
-                    .replace("<li>", "<li>- ")
-                    .replace("<code>", "`")
-                    .replace("</code>", "`")
-                    .replace("\n", " ")
-                    .replace("</p> ", "\n\n");
-
-                log::debug!("original desc:\n{}\n", str);
-
-                let fragment = Html::parse_document(&format!("<html>{}</html>", &str));
-                let cleaned = fragment
-                    .select(&Selector::parse("html").unwrap())
-                    .next()
-                    .unwrap()
-                    .text()
-                    .collect::<Vec<_>>()
-                    .join("");
-
-                log::debug!("cleaned desc:\n{}\n", cleaned);
-
-                item.set_description(cleaned);
-            }
-        }
+        let channel = Channel::read_from(&feed[..])?;
 
         log::debug!(
             "Successfully loaded channel \"{}\", with {} items",
