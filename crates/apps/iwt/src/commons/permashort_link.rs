@@ -39,7 +39,7 @@ mod test {
             short_url: String::from("s/Df3l"),
         };
 
-        assert_eq!(psc.to_string().as_str(), "vdx.hu s/Df3l")
+        assert_eq!(psc.to_string().as_str(), "vdx.hu s/Df3l");
     }
 
     #[test]
@@ -50,6 +50,6 @@ mod test {
             short_url: String::from("s/Df3l"),
         };
 
-        assert_eq!(psc.to_uri().as_str(), "https://vdx.hu/s/Df3l")
+        assert_eq!(psc.to_uri().as_str(), "https://vdx.hu/s/Df3l");
     }
 }

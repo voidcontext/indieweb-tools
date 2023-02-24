@@ -55,7 +55,7 @@ pub mod stubs {
         pub fn new(items: &HashMap<String, Vec<Item>>) -> Self {
             Self {
                 items: items.clone(),
-                urls: Default::default(),
+                urls: Arc::default(),
             }
         }
     }
@@ -65,7 +65,7 @@ pub mod stubs {
             urls,
             4,
             0,
-            create_iwt_extension_map(
+            &create_iwt_extension_map(
                 &[social::Network::Mastodon, social::Network::Twitter],
                 None,
                 &Vec::new(),
@@ -77,7 +77,7 @@ pub mod stubs {
         urls: &[&str],
         count: usize,
         offset: usize,
-        extensions: ExtensionMap,
+        extensions: &ExtensionMap,
     ) -> HashMap<String, Vec<Item>> {
         let mut result = HashMap::new();
         for url in urls {
@@ -93,7 +93,7 @@ pub mod stubs {
                     ),
                     extensions: extensions.clone(),
                     ..Default::default()
-                })
+                });
             }
             result.insert((*url).to_string(), items);
         }

@@ -102,31 +102,31 @@ mod test {
     #[test]
     fn test_short_returns_same_if_short() {
         let short_text = "This is some text.";
-        assert_eq!(shorten(short_text, 100), short_text)
+        assert_eq!(shorten(short_text, 100), short_text);
     }
 
     #[test]
     fn test_shorten_returns_shortened_sentence_limit_on_dot() {
         let text = "This is some text. Looooong word.";
-        assert_eq!(shorten(text, 18), "This is some")
+        assert_eq!(shorten(text, 18), "This is some");
     }
 
     #[test]
     fn test_shorten_returns_shortened_sentence_limit_after_dot() {
         let text = "This is some text. Looooong word.";
-        assert_eq!(shorten(text, 19), "This is some text.")
+        assert_eq!(shorten(text, 19), "This is some text.");
     }
 
     #[test]
     fn test_shorten_returns_shortened_sentence_limit_with_ellipsis() {
         let text = "This is some text. Looooong word.";
-        assert_eq!(shorten(text, 21), "This is some text.")
+        assert_eq!(shorten(text, 21), "This is some text.");
     }
 
     #[test]
     fn test_shorten_returns_shortened_sentence_limit_with_ellipsis_longer() {
         let text = "This is some text. Looooong word.";
-        assert_eq!(shorten(text, 23), "This is some text.")
+        assert_eq!(shorten(text, 23), "This is some text.");
     }
 
     #[test]
@@ -145,7 +145,7 @@ mod test {
                 &["some-tag".to_string()]
             ),
             short_text.to_string() + "\n#SomeTag (localhost asdf)"
-        )
+        );
     }
 
     #[test]
@@ -164,6 +164,6 @@ mod test {
                 &["tag".to_string()]
             ),
             "\"Lorem ipsum dolor sit…\"\n#Tag http://localhost/asdf"
-        )
+        );
     }
 }

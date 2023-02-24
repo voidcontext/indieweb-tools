@@ -112,6 +112,6 @@ mod test {
                     put_base_uri: None,
                 }
             })
-        )
+        );
     }
 }

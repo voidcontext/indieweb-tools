@@ -153,7 +153,7 @@ pub mod stubs {
             children.push((
                 "contentWarning",
                 vec![create_extension("iwt:contentWarning", cw.as_str())],
-            ))
+            ));
         }
 
         create_extension_with_children("iwt:extension", children)

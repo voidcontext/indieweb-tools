@@ -38,7 +38,7 @@ pub mod stubs {
         pub fn new(social_network: Network) -> Self {
             Self {
                 social_network,
-                calls: Default::default(),
+                calls: Arc::default(),
             }
         }
     }
