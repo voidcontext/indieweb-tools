@@ -76,7 +76,7 @@ impl SqliteSyndycatedPostStorage {
                 (),
             )
             .map(|_| ())
-            .map_err(|err| StorageError::PersistenceError(format!("{:?}", err)))
+            .map_err(|err| StorageError::PersistenceError(format!("{err:?}")))
     }
 }
 
@@ -97,7 +97,7 @@ impl Storage for SqliteSyndycatedPostStorage {
                 ],
             )
             .map(|_| ())
-            .map_err(|err| StorageError::PersistenceError(format!("{:?}", err)))
+            .map_err(|err| StorageError::PersistenceError(format!("{err:?}")))
     }
 
     fn find(
@@ -144,16 +144,9 @@ pub mod stubs {
 
     use super::{Storage, SyndicatedPost};
 
+    #[derive(Default)]
     pub struct SyndicatedPostStorageStub {
         pub posts: Mutex<Vec<SyndicatedPost>>,
-    }
-
-    impl Default for SyndicatedPostStorageStub {
-        fn default() -> Self {
-            Self {
-                posts: Default::default(),
-            }
-        }
     }
 
     impl Storage for SyndicatedPostStorageStub {

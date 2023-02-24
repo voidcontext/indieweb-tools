@@ -54,5 +54,5 @@ fn construct_uri(client_id: &str, csrf_state: &str, challenge: &str) -> String {
         .finish();
 
     // Construct URI that starts the Oauth flow
-    format!("https://twitter.com/i/oauth2/authorize?{}", query)
+    format!("https://twitter.com/i/oauth2/authorize?{query}")
 }

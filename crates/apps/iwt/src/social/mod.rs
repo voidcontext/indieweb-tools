@@ -25,7 +25,7 @@ impl FromSql for Network {
             "twitter" => Ok(Network::Twitter),
             "mastodon" => Ok(Network::Mastodon),
             n => Err(FromSqlError::Other(Box::new(SqlConversionError {
-                message: format!("Unknown social network: {}", n),
+                message: format!("Unknown social network: {n}"),
             }))),
         })
     }

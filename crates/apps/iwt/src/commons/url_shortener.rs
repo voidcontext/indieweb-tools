@@ -46,7 +46,7 @@ impl ReqwestClient {
             protocol: protocol.to_owned(),
             domain: domain.to_owned(),
             base_uri: put_base_uri
-                .unwrap_or(&format!("{}://{}", protocol, domain))
+                .unwrap_or(&format!("{protocol}://{domain}"))
                 .clone(),
             client: reqwest::Client::new(),
         }
@@ -67,7 +67,7 @@ impl Client for ReqwestClient {
             Ok(PermashortCitation::new(
                 self.protocol.clone(),
                 self.domain.clone(),
-                format!("s/{}", short),
+                format!("s/{short}"),
             ))
         } else {
             Err(ClientError {

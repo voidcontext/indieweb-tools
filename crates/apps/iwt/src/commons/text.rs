@@ -9,8 +9,8 @@ pub fn shorten(text: &str, limit: usize) -> &str {
     let mut len = 0;
     let mut i = 0;
 
-    while i < words.len() && (len + words[i].len() + 1) < limit as usize {
-        len += words[i].len() + (if i == 0 { 0 } else { 1 });
+    while i < words.len() && (len + words[i].len() + 1) < limit {
+        len += words[i].len() + usize::from(i != 0);
         i += 1;
     }
     &text[0..len]
@@ -32,9 +32,9 @@ pub fn shorten_with_permashort_citation(
     let (cleaned, short) = clean_description(text);
 
     let suffix = if short {
-        format!("\n{} {}", hash_tags, permashort_citation.to_uri())
+        format!("\n{hash_tags} {}", permashort_citation.to_uri())
     } else {
-        format!("\n{} ({})", hash_tags, permashort_citation.to_string())
+        format!("\n{hash_tags} ({})", permashort_citation.to_string())
     };
 
     let shortened = shorten(&cleaned, limit - suffix.len());
@@ -62,10 +62,11 @@ fn words(input: &str) -> Vec<&str> {
     input.split(' ').collect()
 }
 
+#[must_use]
 pub fn clean_description(description: &str) -> (String, bool) {
     let re = Regex::new(r"<h[1-6] ").unwrap();
 
-    let summary: String = re.split(&description).next().unwrap().to_string();
+    let summary: String = re.split(description).next().unwrap().to_string();
 
     let shortened = summary != description;
 
@@ -73,7 +74,7 @@ pub fn clean_description(description: &str) -> (String, bool) {
         .replace("<li>", "<li>- ")
         .replace("<code>", "`")
         .replace("</code>", "`")
-        .replace("\n", " ")
+        .replace('\n', " ")
         .replace("</p> ", "\n\n");
 
     log::debug!("original desc:\n{}\n", str);

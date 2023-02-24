@@ -149,7 +149,7 @@ mod test {
         Mock, MockServer, ResponseTemplate,
     };
 
-    use crate::stubs::auth::token_db::stubs::*;
+    use crate::stubs::auth::token_db::stubs::StubTokenDB;
 
     use crate::commons::auth::oauth::AuthedClient;
 
@@ -157,8 +157,8 @@ mod test {
         BasicClient::new(
             ClientId::new(String::from("some-client-id")),
             None,
-            AuthUrl::new(String::from(format!("{}/oauth/2", base_url))).unwrap(),
-            Some(TokenUrl::new(String::from(format!("{}/oauth/token", base_url))).unwrap()),
+            AuthUrl::new(format!("{base_url}/oauth/2")).unwrap(),
+            Some(TokenUrl::new(format!("{base_url}/oauth/token")).unwrap()),
         )
     }
 
@@ -190,7 +190,7 @@ mod test {
 
         let result = authed_client.authed_request(request).await;
         // There is a response
-        assert!(result.is_ok(), "{:?}", result);
+        assert!(result.is_ok(), "{result:?}");
 
         // Response is expected
         assert_eq!(result.unwrap().status(), StatusCode::OK);
@@ -259,7 +259,7 @@ mod test {
 
         let result = authed_client.authed_request(request).await;
         // There is a response
-        assert!(result.is_ok(), "{:?}", result);
+        assert!(result.is_ok(), "{result:?}");
 
         // Response is expected
         assert_eq!(result.unwrap().status(), StatusCode::OK);
@@ -279,7 +279,10 @@ mod test {
             requests[0]
                 .headers
                 .get(&HeaderName::from("Authorization"))
-                .map(|vs| vs.iter().map(|v| v.to_string()).collect::<Vec<_>>()),
+                .map(|vs| vs
+                    .iter()
+                    .map(std::string::ToString::to_string)
+                    .collect::<Vec<_>>()),
             Some(vec!["Bearer initial-access-token".to_string()])
         );
 
@@ -293,13 +296,11 @@ mod test {
             .collect();
         assert!(form
             .iter()
-            .find(|(k, v)| k == "refresh_token" && v == "initial-refresh-token")
-            .is_some());
+            .any(|(k, v)| k == "refresh_token" && v == "initial-refresh-token"));
 
         assert!(form
             .iter()
-            .find(|(k, v)| k == "client_id" && v == "some-client-id")
-            .is_some());
+            .any(|(k, v)| k == "client_id" && v == "some-client-id"));
 
         // The thirs request was to GET the /restricted url
         assert_eq!(requests[2].url.path(), "/restricted");
@@ -308,7 +309,10 @@ mod test {
             requests[2]
                 .headers
                 .get(&HeaderName::from("Authorization"))
-                .map(|vs| vs.iter().map(|v| v.to_string()).collect::<Vec<_>>()),
+                .map(|vs| vs
+                    .iter()
+                    .map(std::string::ToString::to_string)
+                    .collect::<Vec<_>>()),
             Some(vec!["Bearer new-access-token".to_string()])
         );
 

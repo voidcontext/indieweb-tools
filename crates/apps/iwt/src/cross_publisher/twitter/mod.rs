@@ -89,7 +89,7 @@ impl<DB: TokenDB, USClient: url_shortener::Client> Twitter<DB, USClient> {
             let text = text::shorten_with_permashort_citation(
                 post.description().unwrap(),
                 length,
-                &permashort_citation,
+                permashort_citation,
                 tags,
             );
 
@@ -151,7 +151,7 @@ impl<DB: TokenDB, USClient: url_shortener::Client> Twitter<DB, USClient> {
                     })
                     .await;
 
-            length = length - 5;
+            length -= 5;
         }
 
         result
@@ -172,7 +172,7 @@ impl<DB: TokenDB, WHClient: url_shortener::Client> Target for Twitter<DB, WHClie
             .put_uri(post.link.as_ref().unwrap())
             .await?;
 
-        self.try_publish(&post, &permashort_citation, &extension.tags)
+        self.try_publish(post, &permashort_citation, &extension.tags)
             .await
     }
 

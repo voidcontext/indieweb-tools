@@ -276,7 +276,7 @@ mod test {
                 .store(SyndicatedPost::new(
                     Network::Mastodon,
                     &String::from("id"),
-                    &item,
+                    item,
                 ))
                 .unwrap();
         }
@@ -318,7 +318,7 @@ mod test {
         let calls1 = (*target_calls1).lock().await;
         let calls2 = (*target_calls2).lock().await;
 
-        let expected: Vec<Item> = merged_items(&items, &[feed1, feed2]);
+        let expected: Vec<Item> = merged_items(items, &[feed1, feed2]);
 
         assert_eq!(*calls1, expected);
         assert_eq!(*calls2, expected);
@@ -364,7 +364,7 @@ mod test {
     fn merged_items(items_hash: &HashMap<String, Vec<Item>>, keys: &[&str]) -> Vec<Item> {
         let mut items = Vec::new();
         for key in keys {
-            items.extend(items_hash.get(&key.to_string()).unwrap().clone());
+            items.extend(items_hash.get(&(*key).to_string()).unwrap().clone());
         }
         items
     }

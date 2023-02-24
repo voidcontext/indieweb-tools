@@ -37,7 +37,7 @@ fn get_key<'a>(ext: &'a Extension, key: &str) -> Option<&'a Extension> {
 }
 
 fn get_value<'a>(ext: &'a Extension, key: &str) -> Option<&'a str> {
-    get_key(ext, key).and_then(|item| item.value())
+    get_key(ext, key).and_then(rss::extension::Extension::value)
 }
 
 impl RssItemExt for Item {
@@ -60,7 +60,7 @@ impl RssItemExt for Item {
                             "mastodon" => IwtRssTargetNetwork {
                                 network: social::Network::Mastodon,
                             },
-                            _ => panic!("Unknown netowrk: {}", target_network_name),
+                            _ => panic!("Unknown netowrk: {target_network_name}"),
                         }
                     })
                     .collect::<Vec<_>>();
@@ -72,7 +72,7 @@ impl RssItemExt for Item {
                     .collect();
 
                 let content_warning =
-                    get_value(iwt_extension, "contentWarning").map(|s| s.to_owned());
+                    get_value(iwt_extension, "contentWarning").map(std::borrow::ToOwned::to_owned);
 
                 IwtRssExtension {
                     target_networks,
@@ -184,7 +184,7 @@ mod test {
     };
     use rss::Item;
 
-    use super::stubs::*;
+    use super::stubs::create_iwt_extension_map;
     use super::RssItemExt;
 
     #[test]
@@ -273,7 +273,7 @@ mod test {
             extensions: create_iwt_extension_map(
                 &[social::Network::Mastodon],
                 Some("This is a content_warning".to_string()),
-                &vec!["tag-1", "tag-2"],
+                &["tag-1", "tag-2"],
             ),
             ..Default::default()
         };

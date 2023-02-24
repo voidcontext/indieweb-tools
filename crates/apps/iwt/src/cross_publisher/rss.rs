@@ -35,7 +35,7 @@ pub mod tests {}
 
 #[cfg(test)]
 pub mod stubs {
-    use std::{collections::HashMap, fmt::Display, ops::Deref, sync::Arc};
+    use std::{collections::HashMap, fmt::Display, sync::Arc};
 
     use async_mutex::Mutex;
     use async_trait::async_trait;
@@ -82,20 +82,20 @@ pub mod stubs {
         let mut result = HashMap::new();
         for url in urls {
             let mut items = Vec::new();
-            for i in (0 + offset)..(count + offset) {
+            for i in offset..(count + offset) {
                 items.push(Item {
-                    title: Some(format!("This is pos #{} at {}", i, url)),
-                    link: Some(format!("{}/post-{}", url, i)),
+                    title: Some(format!("This is pos #{i} at {url}")),
+                    link: Some(format!("{url}/post-{i}")),
                     guid: Some(
                         GuidBuilder::default()
-                            .value(format!("{}/post-{}", url, i))
+                            .value(format!("{url}/post-{i}"))
                             .build(),
                     ),
                     extensions: extensions.clone(),
                     ..Default::default()
                 })
             }
-            result.insert(url.to_string(), items);
+            result.insert((*url).to_string(), items);
         }
         result
     }
@@ -113,7 +113,7 @@ pub mod stubs {
                 Ok(parsed) => {
                     let should_fail = parsed
                         .query_pairs()
-                        .any(|(key, value)| key.deref() == "failure" && value.deref() == "1");
+                        .any(|(key, value)| &*key == "failure" && &*value == "1");
 
                     if should_fail {
                         Err(Box::new(RssClientError))
@@ -127,7 +127,7 @@ pub mod stubs {
                         Ok(channel)
                     }
                 }
-                _ => panic!("Invalid url: {}", url),
+                _ => panic!("Invalid url: {url}"),
             }
         }
     }
