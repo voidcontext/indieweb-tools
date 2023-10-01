@@ -69,7 +69,7 @@ async fn receive_token(
     let state_param = params.get("state").expect("state param not found");
 
     assert!(
-        state_param != &state.oauth_state,
+        state_param == &state.oauth_state,
         "Invalid state param,
 expected: {}
 got     : {}",
