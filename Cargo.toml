@@ -3,3 +3,6 @@ members = [
   "crates/apps/iwt",
   "crates/apps/url_shortener",
 ]
+[workspace.package]
+name = "indieweb-tools"
+version = "0.1.0"

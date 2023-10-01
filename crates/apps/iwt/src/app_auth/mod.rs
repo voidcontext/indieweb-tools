@@ -1,10 +1,8 @@
 use crate::config::Config;
 
-use clap::Subcommand;
-
 mod twitter;
 
-#[derive(Subcommand)]
+#[derive(clap::Subcommand)]
 pub enum AuthSubcommand {
     /// Twitter Oauth flow
     Twitter,
